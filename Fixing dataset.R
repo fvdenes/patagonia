@@ -1,8 +1,8 @@
 ##### Analysis of patagonia parrot count data #####
 
 ## Load excel data data ####
-pat_obs <- read.csv("~/Dropbox/Pos-doc/Loros Patagonia/patagonia_obs.csv")
-pat_site <- read.csv("~/Dropbox/Pos-doc/Loros Patagonia/patagonia_site.csv")
+pat_obs <- read.csv("~/Dropbox/EBD/Loros Patagonia/patagonia_obs.csv")
+pat_site <- read.csv("~/Dropbox/EBD/Loros Patagonia/patagonia_site.csv")
 
 ### Fixing datasets ####
 str(pat_obs)
@@ -71,13 +71,26 @@ levels(pat_site$habitat)
 habitat <- as.character(pat_site$habitat)
 habitat[which(habitat=="agroganadero")]<- "Agroganadero"
 pat_site$habitat<- as.factor(habitat)
+
+pat_site$habitat2<-pat_site$habitat # backup original habitat classification before simplification
+
+# Reducing habitat levels:
+# Estepa + Matorral + Otros = Otros
+pat_site$habitat[which(pat_site$habitat=="Estepa")]<-"Otros"
+pat_site$habitat[which(pat_site$habitat=="Matorral")]<-"Otros"
+# Araucaria + Aramix = Araucaria
+pat_site$habitat[which(pat_site$habitat=="Aramix")]<-"Araucaria"
+
+pat_site$habitat <- as.character(pat_site$habitat)
+pat_site$habitat <- as.factor(pat_site$habitat)
 pat_site$habitat<-relevel(pat_site$habitat,"Araucaria")
+
 
 my_matrix <- model.matrix(~ pat_site$habitat)
 head(my_matrix)
 my_matrix <- data.frame(my_matrix[,-1])
 
-colnames(my_matrix) <- unlist(strsplit(colnames(my_matrix),"habitat"))[seq(2,16,by=2)]
+colnames(my_matrix) <- unlist(strsplit(colnames(my_matrix),"habitat"))[seq(2,10,2)]
 
 pat_site<-cbind(pat_site,my_matrix)
 
@@ -88,12 +101,12 @@ head(pat_site,n=20)
 # Write data files
 write.csv(pat_obs[which(pat_obs$species=="E. leptorhynchus"),c(13,3,11,12,6:10)],"pat_obs_lep.csv",row.names = FALSE)
 write.csv(pat_obs[which(pat_obs$species=="E. ferrugineus"),c(13,3,11,12,6:10)],"pat_obs_fer.csv",row.names = FALSE)
-write.csv(pat_site[,c(7,2,4:6,8:15)],"pat_site.csv",row.names = FALSE)
+write.csv(pat_site[,c(7,2,4:6,9:13)],"pat_site.csv",row.names = FALSE)
 
 rm(pat_obs,pat_site,my_matrix,habitat)
 
 #### Load count and site data ####
 
-site.data <- read.csv("~/Dropbox/Pos-doc/Loros Patagonia/pat_site.csv")
-obs_fer <- read.csv("~/Dropbox/Pos-doc/Loros Patagonia/pat_obs_fer.csv")
-obs_lep <- read.csv("~/Dropbox/Pos-doc/Loros Patagonia/pat_obs_lep.csv")
+site.data <- read.csv("~/Dropbox/EBD/Loros Patagonia/pat_site.csv")
+obs_fer <- read.csv("~/Dropbox/EBD/Loros Patagonia/pat_obs_fer.csv")
+obs_lep <- read.csv("~/Dropbox/EBD/Loros Patagonia/pat_obs_lep.csv")
