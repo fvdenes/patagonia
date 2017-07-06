@@ -6,8 +6,8 @@
 site.data <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_site.csv")
 obs_fer <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_obs_fer.csv")
 #mac
-site.data <- read.csv("~/Dropbox/EBD/Loros Patagonia/pat_site.csv")
-obs_fer <- read.csv("~/Dropbox/EBD/Loros Patagonia/pat_obs_fer.csv")
+#site.data <- read.csv("~/Dropbox/EBD/Loros Patagonia/pat_site.csv")
+#obs_fer <- read.csv("~/Dropbox/EBD/Loros Patagonia/pat_obs_fer.csv")
 
 # Site-level covariates
 elevation <- site.data$elevation
@@ -24,9 +24,9 @@ data <- obs_fer
 
 groupsize <- data[,"count"] -1    # Input groupsize-1 as data
 
-B <- 510 # strip half-width
+B <- 550 # strip half-width
 
-delta <- 10 # width of distance bin
+delta <- 50 # width of distance bin
 d <- data$distance
 dclass <- d%/%delta+1 # assign observed distances to distance intervals
 xg <- seq(0,B,delta)
@@ -112,8 +112,8 @@ cat("
 # Load some libraries, define MCMC settings, inits function and parameters to save
 
 library("jagsUI")  # 
-ni <- 3000   ;   nb <- 500   ;   nt <- 2   ;   nc <- 3
-inits <- function(){list(alpha0=1, alpha1=0.5, beta0=1, beta1=-0.5,beta2=-0.5,beta3=-0.5,beta4=-0.5,beta5=-0.5,beta6=-0.5, z=zst)}
+ni <- 1000   ;   nb <- 100   ;   nt <- 2   ;   nc <- 3
+inits <- function(){list(alpha0=0, alpha1=0, beta0=0, beta1=0,beta2=0,beta3=0,beta4=0,beta5=0,beta6=0, z=zst)}
 params <- c("alpha0", "alpha1", "beta0", "beta1", "beta2", "beta3", "beta4", "beta5", "beta6",  "psi", "Ntotal", "G", "lambda.group")
 
 # Call JAGS, check convergence and summarize posterior distributions
