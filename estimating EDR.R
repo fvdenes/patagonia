@@ -1,3 +1,4 @@
+obs_fer <- read.csv("~/Dropbox/collaborations/patagonia/pat_obs_fer.csv")
 obs_fer <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_obs_fer.csv")
 #obs_lep <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_obs_lep.csv")
 
@@ -38,17 +39,32 @@ x$bin <- cut(x$distance, br,  include.lowest = TRUE)
 table(x$bin)
 x$pres <- 1
 
+x$groupid <- 0
+for (i in unique(x$site)) {
+    ii <- x$site == i
+    x[ii, "groupid"] <- seq_len(sum(ii))
+}
+x$site_g <- paste0(x$site, "_", x$groupid)
+head(x[order(x$site),], 25)
+
 # Matrix with binned detection distances in each site
 Y <- as.matrix(Xtab(pres ~site + bin, x))
 
 # Dataframe for covariate vectors
-X <- data.frame(
-  gsize=rowSums(Xtab(count ~site + bin, x)), # what about sites with more than one group detected (e.g. 226)? this command sums the counts from all groups, irrespective of the distance at which each group was detected. Should they not be separated?
-  pair=rowSums(Xtab(pair ~site + bin, x)), # not sure if this and lines below are correct...
-  jdate=rowSums(Xtab(jdate ~site + bin, x)),
-  urban=rowSums(Xtab(urban ~site + bin, x)), 
-  others=rowSums(Xtab(others ~site + bin, x))
-  )
+## sum of all inds in all groups
+X <- data.frame(ntot=rowSums(Xtab(count ~site + bin, x)))
+## number of pairs / site
+tmp <- aggregate(x[,c("pair"),drop=FALSE], list(Site=x$site), sum)
+stopifnot(all(rownames(X) == as.character(tmp$Site)))
+X$pair <- tmp$xpair
+## number of groups / site
+tmp <- aggregate(x[,c("groupid"),drop=FALSE], list(Site=x$site), max)
+X$ngroups <- tmp$groupid
+## average group size = ntot / ngroups
+X$gavg <- X$ntot / X$ngroups
+## the rest is just repeated, so we take the unique values
+tmp <- nonDuplicated(x, site, TRUE)
+X <- data.frame(X, tmp[rownames(X), c("jdate", "urban", "others")])
 
 
 D <- matrix(br[-1], nrow(Y), length(br)-1, byrow=TRUE)
