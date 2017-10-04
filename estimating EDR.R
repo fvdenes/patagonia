@@ -8,13 +8,20 @@ x <- as.data.frame(obs_fer)
 ### Exploratory plots ####
 head(x)
 
+## Some notes on dataset
+# each row is a group
+# count is group size
+# season is breeding and non-breeding
+# three habitat types: agricultural (pastures, crops), urban and others (includes different forest types)
+# transect length (t.length) in km
+# detection distance in m
+
+
 plot(table(x$count))
 
 plot(table(subset(x,count==2)$distance)) # detection distance for groups=2
 plot(table(subset(x,count!=2)$distance)) # detection distance for groups other than 2
 
-plot(density(subset(x,count==2)$distance))
-plot(density(subset(x,count!=2)$distance))
 
 # new variable identifying pairs from other groups
 x$pair<-0
@@ -37,9 +44,9 @@ Y <- as.matrix(Xtab(pres ~site + bin, x))
 # Dataframe for covariate vectors
 X <- data.frame(
   gsize=rowSums(Xtab(count ~site + bin, x)), # what about sites with more than one group detected (e.g. 226)? this command sums the counts from all groups, irrespective of the distance at which each group was detected. Should they not be separated?
-  pair=rowSums(Xtab(pair ~site + bin, x)),
+  pair=rowSums(Xtab(pair ~site + bin, x)), # not sure if this and lines below are correct...
   jdate=rowSums(Xtab(jdate ~site + bin, x)),
-  urban=rowSums(Xtab(urban ~site + bin, x)),
+  urban=rowSums(Xtab(urban ~site + bin, x)), 
   others=rowSums(Xtab(others ~site + bin, x))
   )
 
