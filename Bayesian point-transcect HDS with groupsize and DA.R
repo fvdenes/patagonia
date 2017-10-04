@@ -11,7 +11,7 @@ simHDSg_factor <- function(type = "line", nsites = 100, lambda.group = 0.75, alp
   #     lambda.group: Poisson mean of group size
   #     alpha0, alpha1: intercept and slope of log-linear model relating sigma of
   #        half-normal detection function to group size
-  #     beta0, beta1: intercept and slope of log-linear model relating the Poisson
+  #     beta0, beta1, etc: intercept and slope of log-linear model relating the Poisson
   #        mean of the number of groups per unit area to habitat
   #     B: strip half width
   #
@@ -190,7 +190,7 @@ cat("
     # Construct cell probabilities for nD cells (distance classes)
     for (g in 1:nD){                     # midpt[g] = midpoint of each cell; g is each distance class  
     log(p[s,g]) <- -midpt[g]*midpt[g]/(2*sigma[s]*sigma[s])
-    pi[s,g] <- ((2*midpt[g])/(B*B))*delta
+    pi[s,g] <- ((2*midpt[g])/(B*B))*delta # prob. per interval
     pi.probs[s,g] <- pi[s,g]/norm[s]
     f[s,g] <- p[s,g] * pi[s,g]
     fc[s,g] <- f[s,g]/pcap[s]          # Conditional probabilities
@@ -221,7 +221,7 @@ params <- c("alpha0", "alpha1", "beta0", "beta1","beta2","beta3", "psi", "Ntotal
 out1 <- jags(bugs.data, inits, params, "model1.txt", n.thin=nt,  n.chains=nc, n.burnin=nb,n.iter=ni, parallel=FALSE)
 
 par(mfrow = c(3,2))
-traceplot(out1)    
+traceplot(out1)
 print(out1, 3)
 
 # Data-generating values for model parameters: alpha0 = 0, alpha1 = 0.5, beta0 = 1, beta1 = -0.5,beta2 = 0.5, beta3 = 0.8
