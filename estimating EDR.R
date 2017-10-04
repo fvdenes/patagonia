@@ -1,5 +1,6 @@
 obs_fer <- read.csv("~/Dropbox/collaborations/patagonia/pat_obs_fer.csv")
 obs_fer <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_obs_fer.csv")
+
 #obs_lep <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_obs_lep.csv")
 
 
@@ -56,7 +57,7 @@ X <- data.frame(ntot=rowSums(Xtab(count ~site + bin, x)))
 ## number of pairs / site
 tmp <- aggregate(x[,c("pair"),drop=FALSE], list(Site=x$site), sum)
 stopifnot(all(rownames(X) == as.character(tmp$Site)))
-X$pair <- tmp$xpair
+X$pair <- tmp$pair
 ## number of groups / site
 tmp <- aggregate(x[,c("groupid"),drop=FALSE], list(Site=x$site), max)
 X$ngroups <- tmp$groupid
@@ -66,26 +67,44 @@ X$gavg <- X$ntot / X$ngroups
 tmp <- nonDuplicated(x, site, TRUE)
 X <- data.frame(X, tmp[rownames(X), c("jdate", "urban", "others")])
 
+head(X, n=25)
 
 D <- matrix(br[-1], nrow(Y), length(br)-1, byrow=TRUE)
 rownames(X) <- rownames(D) <- rownames(Y)
 colnames(D) <- colnames(Y)
 
 
+# Null model
 m1 <- cmulti(Y | D ~1, type="dis")
 summary(m1)
-exp(coef(m1))
-m2 <- cmulti(Y | D ~ log(gsize), X, type="dis")
+
+# Average group size
+m2 <- cmulti(Y | D ~ gavg, X, type="dis")
 summary(m2)
 
+# Number of pairs
 m3 <- cmulti(Y | D ~ pair, X, type = "dis")
 summary(m3)
 
-m4 <- cmulti(Y | D ~ log(gsize)*pair, X, type="dis")
+
+m4 <- cmulti(Y | D ~ jdate , X, type="dis")
 summary(m4)
 
 m5 <- cmulti(Y | D ~ urban + others, X, type = "dis")
 summary(m5)
 
-m6 <- cmulti(Y | D ~ log(jdate), X, type= "dis")
-summary(m6)
+# There is a significant effect of habitat type on EDR
+
+AIC(m1,m2,m3,m4,m5)[order(AIC(m1,m2,m3,m4,m5)$AIC),]
+
+# Agricultural
+exp(coef(m5))[1]
+
+# Urban
+exp(sum(coef(m5)[1:2]))
+
+# Others
+exp(sum(coef(m5)[c(1,3)]))
+
+
+
