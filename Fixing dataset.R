@@ -130,6 +130,11 @@ for(i in 1:nrow(pat_obs)){
 }
 
 str(pat_obs)
+
+# put time-of-visit information on site-level data
+
+
+
 # Write data files
 write.csv(pat_obs[which(pat_obs$species=="E. leptorhynchus"),c(14,3,11,12,6:9,15:18)],"pat_obs_lep.csv",row.names = FALSE)
 write.csv(pat_obs[which(pat_obs$species=="E. ferrugineus"),c(14,3,11,12,6:9,15:18)],"pat_obs_fer.csv",row.names = FALSE)

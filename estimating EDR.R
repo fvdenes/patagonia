@@ -93,9 +93,13 @@ summary(m4)
 m5 <- cmulti(Y | D ~ urban + others, X, type = "dis")
 summary(m5)
 
+m6 <- cmulti(Y | D ~ ngroups, X, type = "dis")
+summary(m6)
+
 # There is a significant effect of habitat type on EDR
 
-AIC(m1,m2,m3,m4,m5)[order(AIC(m1,m2,m3,m4,m5)$AIC),]
+AIC(m1,m2,m3,m4,m5,m6)[order(AIC(m1,m2,m3,m4,m5,m6)$AIC),]
+
 
 # Agricultural
 exp(coef(m5))[1]
@@ -106,5 +110,20 @@ exp(sum(coef(m5)[1:2]))
 # Others
 exp(sum(coef(m5)[c(1,3)]))
 
+
+## Estimating area surveyed for each site, in km^2
+sites <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_site.csv")
+
+sites$A <- sites$habitat.length.km*(2*exp(coef(m5))[1]/1000)
+for (i in 1:nrow(sites)){
+  if (sites$habitat[i]=="Urbano"){
+    sites$A[i] <- sites$habitat.length.km[i]*(2*exp(sum(coef(m5)[1:2]))/1000)
+  }
+  if (sites$habitat[i]=="Otros"){
+    sites$A[i] <- sites$habitat.length.km[i]*(2*exp(sum(coef(m5)[c(1,3)]))/1000)
+  }
+}
+
+head(sites,n=50)
 
 
