@@ -65,7 +65,7 @@ X$ngroups <- tmp$groupid
 X$gavg <- X$ntot / X$ngroups
 ## the rest is just repeated, so we take the unique values
 tmp <- nonDuplicated(x, site, TRUE)
-X <- data.frame(X, tmp[rownames(X), c("jdate", "urban", "others")])
+X <- data.frame(X, tmp[rownames(X), c("jdate", "urban", "others","site")])
 
 head(X, n=25)
 
@@ -124,6 +124,32 @@ for (i in 1:nrow(sites)){
   }
 }
 
-head(sites,n=50)
+head(sites,n=300)
 
 
+# Model for number of groups: Gi ~ Poisson(DiAi), where Di = covariates and Ai = area sampled in site
+str(sites)
+summary(sites)
+sites$ngroups<- 0
+sites$ngroups[which(sites$site%in%X$site)]<-X$ngroups
+
+table(sites$ngroups)
+
+
+boxplot(ngroups~habitat, data=sites)
+plot(ngroups~elevation, data=sites)
+plot(ngroups~A, data=sites)
+
+
+# linear effects of Area, habitat and elevation
+glm1 <- glm(ngroups~habitat+elevation+A, family=poisson, data=sites)
+summary(glm1)
+anova(glm1)
+
+# quadratic effect of elevation
+sites$ele2 <- sites$elevation^2
+glm2 <- glm(ngroups~habitat+elevation+ele2+A, family=poisson, data=sites)
+summary(glm2)
+anova(glm2)
+
+AIC(glm1,glm2)
