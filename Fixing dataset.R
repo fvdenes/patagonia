@@ -11,6 +11,7 @@ pat_site <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/patagonia_si
 
 ### Fixing datasets ####
 str(pat_obs)
+str(pat_site)
 
 pat_obs$distance<-as.numeric(pat_obs$distance)
 
@@ -26,13 +27,32 @@ pat_obs$count<-as.numeric(pat_obs$count)
 
 #pat_obs$sample.unit<-as.character(pat_obs$sample.unit)
 
-pat_obs$jdate<-strptime(pat_obs$date,format="%e/%m/%y")$yday+1
-pat_obs$year<-strptime(pat_obs$date,format="%e/%m/%y")$year+1900
+#### Assign dates to pat_obs ####
+pat_obs$date<-as.character(pat_obs$date)
+pat_obs$sample.unit<-as.character(pat_obs$sample.unit)
+pat_site$date<-as.character(pat_site$date)
+pat_obs$sample.unit<-as.character(pat_obs$sample.unit)
+
+for(i in 1:nrow(pat_obs)){
+  pat_obs$date[i] <-pat_site$date[which(pat_site$sample.unit==pat_obs$sample.unit[i])]
+} 
+
+head(pat_obs,n=100)
+
+pat_obs$jdate<-strptime(pat_obs$date,format="%Y-%m-%d")$yday+1
+pat_obs$year<-strptime(pat_obs$date,format="%Y-%m-%d")$year+1900
 pat_obs$month<-as.numeric(strftime(pat_obs$date,format="%m"))
+
+pat_site$jdate<-strptime(pat_site$date,format="%Y-%m-%d")$yday+1
+pat_site$year<-strptime(pat_site$date,format="%Y-%m-%d")$year+1900
+pat_site$month<-as.numeric(strftime(pat_site$date,format="%m"))
 
 # assign season: breeding (11,12) and non-breeding (rest)
 pat_obs$season<-"non-breeding"
 pat_obs$season[which(pat_obs$month==11&12)]<-"breeding"
+
+pat_site$season<-"non-breeding"
+pat_site$season[which(pat_site$month==11&12)]<-"breeding"
 
 pat_obs$time[which(pat_obs$time=="")]<-NA
 pat_obs$time <- as.character(pat_obs$time)
