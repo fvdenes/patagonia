@@ -1,8 +1,13 @@
 ##### Analysis of patagonia parrot count data #####
 
 ## Load excel data data ####
+#mac
 pat_obs <- read.csv("~/Dropbox/EBD/Loros Patagonia/patagonia_obs.csv")
 pat_site <- read.csv("~/Dropbox/EBD/Loros Patagonia/patagonia_site.csv")
+#windows
+pat_obs <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/patagonia_obs.csv")
+pat_site <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/patagonia_site.csv")
+
 
 ### Fixing datasets ####
 str(pat_obs)
@@ -23,6 +28,11 @@ pat_obs$count<-as.numeric(pat_obs$count)
 
 pat_obs$jdate<-strptime(pat_obs$date,format="%e/%m/%y")$yday+1
 pat_obs$year<-strptime(pat_obs$date,format="%e/%m/%y")$year+1900
+pat_obs$month<-as.numeric(strftime(pat_obs$date,format="%m"))
+
+# assign season: breeding (11,12) and non-breeding (rest)
+pat_obs$season<-"non-breeding"
+pat_obs$season[which(pat_obs$month==11&12)]<-"breeding"
 
 pat_obs$time[which(pat_obs$time=="")]<-NA
 pat_obs$time <- as.character(pat_obs$time)
@@ -33,7 +43,11 @@ pat_obs$time <- sapply(strsplit(pat_obs$time,":"),
        }
 )
 
+pat_obs$time[which(pat_obs$year==2013&2014)]<-NA # Fix time variable (counts from 2013 and 2014 have weird times)
+
 pat_obs
+
+
 
 ### Fixing site-level dataset
 
@@ -75,11 +89,15 @@ pat_site$habitat<- as.factor(habitat)
 pat_site$habitat2<-pat_site$habitat # backup original habitat classification before simplification
 
 # Reducing habitat levels:
-# Estepa + Matorral + Otros = Otros
+# Araucaria + Aramix + Estepa + Matorral + Otros = Otros
 pat_site$habitat[which(pat_site$habitat=="Estepa")]<-"Otros"
 pat_site$habitat[which(pat_site$habitat=="Matorral")]<-"Otros"
-# Araucaria + Aramix = Araucaria
-pat_site$habitat[which(pat_site$habitat=="Aramix")]<-"Araucaria"
+pat_site$habitat[which(pat_site$habitat=="Araucaria")]<-"Otros"
+pat_site$habitat[which(pat_site$habitat=="Aramix")]<-"Otros"
+pat_site$habitat[which(pat_site$habitat=="Noto")]<-"Otros"
+
+# Agroganadero + Agroforestal = Agroganadero
+pat_site$habitat[which(pat_site$habitat=="Agroforestal")]<-"Agroganadero"
 
 pat_site$habitat <- as.character(pat_site$habitat)
 pat_site$habitat <- as.factor(pat_site$habitat)
@@ -90,20 +108,39 @@ my_matrix <- model.matrix(~ pat_site$habitat)
 head(my_matrix)
 my_matrix <- data.frame(my_matrix[,-1])
 
-colnames(my_matrix) <- unlist(strsplit(colnames(my_matrix),"habitat"))[seq(2,10,2)]
+colnames(my_matrix) <- unlist(strsplit(colnames(my_matrix),"habitat"))[seq(2,4,2)]
 
 pat_site<-cbind(pat_site,my_matrix)
 
 head(pat_site,n=20)
 
 
+# put site-level data in observation dataset
+head(pat_obs,n=100)
+pat_obs$t.length<-NA
+pat_obs$elevation<- NA
+pat_obs$others<-NA
+pat_obs$urban<-NA
+
+for(i in 1:nrow(pat_obs)){
+  pat_obs$t.length[i]<-pat_site$habitat.length.km[which(pat_site$site==pat_obs$site[i])]
+  pat_obs$elevation[i]<- pat_site$elevation[which(pat_site$site==pat_obs$site[i])]
+  pat_obs$others[i]<- pat_site$Otros[which(pat_site$site==pat_obs$site[i])]
+  pat_obs$urban[i]<-pat_site$Urbano[which(pat_site$site==pat_obs$site[i])]
+}
+
+str(pat_obs)
+
+# put time-of-visit information on site-level data
+
+
 
 # Write data files
-write.csv(pat_obs[which(pat_obs$species=="E. leptorhynchus"),c(13,3,11,12,6:10)],"pat_obs_lep.csv",row.names = FALSE)
-write.csv(pat_obs[which(pat_obs$species=="E. ferrugineus"),c(13,3,11,12,6:10)],"pat_obs_fer.csv",row.names = FALSE)
-write.csv(pat_site[,c(7,2,4:6,9:13)],"pat_site.csv",row.names = FALSE)
+write.csv(pat_obs[which(pat_obs$species=="E. leptorhynchus"),c(14,3,11,12,6:9,15:18)],"pat_obs_lep.csv",row.names = FALSE)
+write.csv(pat_obs[which(pat_obs$species=="E. ferrugineus"),c(14,3,11,12,6:9,15:18)],"pat_obs_fer.csv",row.names = FALSE)
+write.csv(pat_site[,c(7,2,4:6,9:10)],"pat_site.csv",row.names = FALSE)
 
-rm(pat_obs,pat_site,my_matrix,habitat)
+rm(pat_obs,pat_site,my_matrix,habitat,i)
 
 #### Load count and site data ####
 
