@@ -124,7 +124,7 @@ for (i in 1:nrow(sites)){
   }
 }
 
-head(sites,n=300)
+head(sites,n=50)
 
 
 # Model for number of groups: Gi ~ Poisson(DiAi), where Di = covariates and Ai = area sampled in site
@@ -135,10 +135,53 @@ sites$ngroups[which(sites$site%in%X$site)]<-X$ngroups
 
 table(sites$ngroups)
 
+# some exploratory plots
+test<- with(sites,table(ngroups,habitat))
+test<-as.matrix(as.data.frame.matrix(test))
+plot( col(test),
+      row(test),
+      cex=log(test),#log-transformed sample size
+      xlim=c(0.5,ncol(test)+0.5),
+      ylim=c(0.5,nrow(test)+0.5),
+      axes=FALSE,
+      ann=FALSE
+)
+axis(1,at=1:ncol(test),labels=colnames(test),cex.axis=0.8)
+axis(2,at=1:nrow(test),labels=rownames(test),cex.axis=0.8)
+title(xlab="Habitat",ylab="Number of groups")
 
-boxplot(ngroups~habitat, data=sites)
+test2<- with(sites,table(ngroups,season))
+test2<-as.matrix(as.data.frame.matrix(test2))
+plot( col(test2),
+      row(test2),
+      cex=log(test2),#log-transformed sample size
+      xlim=c(0.5,ncol(test2)+0.5),
+      ylim=c(0.5,nrow(test2)+0.5),
+      axes=FALSE,
+      ann=FALSE
+)
+axis(1,at=1:ncol(test2),labels=colnames(test2),cex.axis=0.8)
+axis(2,at=1:nrow(test2),labels=rownames(test2),cex.axis=0.8)
+title(xlab="Season",ylab="Number of groups")
+
+test3<- with(sites,table(ngroups,year))
+test3<-as.matrix(as.data.frame.matrix(test3))
+plot( col(test3),
+      row(test3),
+      cex=log(test3),#log-transformed sample size
+      xlim=c(0.5,ncol(test3)+0.5),
+      ylim=c(0.5,nrow(test3)+0.5),
+      axes=FALSE,
+      ann=FALSE
+)
+axis(1,at=1:ncol(test3),labels=colnames(test3),cex.axis=0.8)
+axis(2,at=1:nrow(test3),labels=rownames(test3),cex.axis=0.8)
+title(xlab="Year",ylab="Number of groups")
+
+
 plot(ngroups~elevation, data=sites)
 plot(ngroups~A, data=sites)
+plot(ngroups~jdate, data=sites)
 
 
 # linear effects of Area, habitat and elevation
@@ -152,4 +195,24 @@ glm2 <- glm(ngroups~habitat+elevation+ele2+A, family=poisson, data=sites)
 summary(glm2)
 anova(glm2)
 
-AIC(glm1,glm2)
+AIC(glm1,glm2) # model with quadratic elevation has better fit
+
+
+# enter temporal covariates
+glm3 <- glm(ngroups~habitat+elevation+ele2+A+season, family=poisson, data=sites)
+summary(glm3)
+
+glm4 <- glm(ngroups~habitat+elevation+ele2+A+jdate, family=poisson, data=sites)
+summary(glm4)
+
+AIC(glm2,glm3,glm4) # model with season has better fit
+
+# enter year
+glm5 <- glm(ngroups~habitat+elevation+ele2+A+season, family=poisson, data=sites)
+summary(glm5)
+
+AIC(glm3,glm5)
+
+# model with year has better fit
+anova(glm5)
+
