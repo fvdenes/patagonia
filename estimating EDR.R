@@ -1,6 +1,7 @@
-obs_fer <- read.csv("~/Dropbox/collaborations/patagonia/pat_obs_fer.csv")
-obs_fer <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_obs_fer.csv")
-obs_fer <- read.csv("~/Dropbox/EBD/Loros Patagonia/pat_obs_fer.csv")
+obs_fer <- read.csv("~/Dropbox/collaborations/patagonia/pat_obs_fer.csv") # Peter Mac
+
+obs_fer <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_obs_fer.csv") # Francisco Windows
+obs_fer <- read.csv("~/Dropbox/EBD/Loros Patagonia/pat_obs_fer.csv") # Francisco Mac
 
 #obs_lep <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_obs_lep.csv")
 
@@ -187,36 +188,63 @@ plot(ngroups~elevation, data=sites)
 plot(ngroups~A, data=sites)
 plot(ngroups~jdate, data=sites)
 
+sites <- sites[!is.na(sites$A) & sites$habitat.length.km>0,]
+
+## source diagnostic functions from Peter's code
+source("diagnostics-functions.R")
+
+siplot(ngroups ~ ., sites)
+
+
 
 # linear effects of Area, habitat and elevation
-glm1 <- glm(ngroups~habitat+elevation+A, family=poisson, data=sites)
+glm1 <- glm(ngroups~habitat+elevation, family=poisson, data=sites, offset=log(sites$A))
 summary(glm1)
 anova(glm1)
 
 # quadratic effect of elevation
-sites$ele2 <- sites$elevation^2
-glm2 <- glm(ngroups~habitat+elevation+ele2+A, family=poisson, data=sites)
+glm2 <- glm(ngroups~habitat+elevation+I(elevation^2), family=poisson, data=sites, offset=log(sites$A))
 summary(glm2)
 anova(glm2)
 
 AIC(glm1,glm2) # model with quadratic elevation has better fit
 
+# test only habitat vs. only elevation
+glm3 <- glm(ngroups~habitat, family=poisson, data=sites, offset=log(sites$A))
+summary(glm3)
+anova(glm3)
 
-# enter temporal covariates
-glm3 <- glm(ngroups~habitat+elevation+ele2+A+season, family=poisson, data=sites)
+glm4 <- glm(ngroups~elevation+I(elevation^2), family=poisson, data=sites, offset=log(sites$A))
+summary(glm4)
+anova(glm4)
+
+AIC(glm2,glm3,glm4)
+
+# There with both covariates is best
+
+# enter within-year temporal covariates
+glm3 <- glm(ngroups~habitat+elevation+I(elevation^2)+season, family=poisson, data=sites, offset=log(sites$A))
 summary(glm3)
 
-glm4 <- glm(ngroups~habitat+elevation+ele2+A+jdate, family=poisson, data=sites)
+glm4 <- glm(ngroups~habitat+elevation+I(elevation^2)+jdate, family=poisson, data=sites, offset=log(sites$A))
 summary(glm4)
 
-AIC(glm2,glm3,glm4) # model with season has better fit
-
-# enter year
-glm5 <- glm(ngroups~habitat+elevation+ele2+A+season, family=poisson, data=sites)
+# test interaction between season and habitat and jdate and habitat
+glm5 <- glm(ngroups~elevation+I(elevation^2)+habitat*season, family=poisson, data=sites, offset=log(sites$A))
 summary(glm5)
 
-AIC(glm3,glm5)
+glm6 <- glm(ngroups~elevation+I(elevation^2)+habitat*jdate, family=poisson, data=sites, offset=log(sites$A))
+summary(glm6)
+
+AIC(glm2,glm3,glm4,glm5,glm6)[order(AIC(glm2,glm3,glm4,glm5,glm6)$AIC),] # although the model with season*habitat interaction has a slightly better fit, the interaction is not significant, so continue with model with season and no interaction (glm3)
+
+# enter year covariate
+glm7 <- glm(ngroups~habitat+elevation++I(elevation^2)+season+year, family=poisson, data=sites, offset=log(sites$A))
+summary(glm7)
+
+AIC(glm3,glm7)
 
 # model with year has better fit
-anova(glm5)
+anova(glm7)
 
+mep(glm7) # some diagnostic plots
