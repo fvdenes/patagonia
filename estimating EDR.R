@@ -1,5 +1,6 @@
 obs_fer <- read.csv("~/Dropbox/collaborations/patagonia/pat_obs_fer.csv")
 obs_fer <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_obs_fer.csv")
+obs_fer <- read.csv("~/Dropbox/EBD/Loros Patagonia/pat_obs_fer.csv")
 
 #obs_lep <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_obs_lep.csv")
 
@@ -113,6 +114,7 @@ exp(sum(coef(m5)[c(1,3)]))
 
 ## Estimating area surveyed for each site, in km^2
 sites <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_site.csv")
+sites <- read.csv("~/Dropbox/EBD/Loros Patagonia/pat_site.csv")
 
 sites$A <- sites$habitat.length.km*(2*exp(coef(m5))[1]/1000)
 for (i in 1:nrow(sites)){
@@ -134,6 +136,8 @@ sites$ngroups<- 0
 sites$ngroups[which(sites$site%in%X$site)]<-X$ngroups
 
 table(sites$ngroups)
+
+boxplot(ngroups~habitat,data=sites)
 
 # some exploratory plots
 test<- with(sites,table(ngroups,habitat))
