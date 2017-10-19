@@ -239,7 +239,7 @@ summary(glm6)
 AIC(glm2,glm3,glm4,glm5,glm6)[order(AIC(glm2,glm3,glm4,glm5,glm6)$AIC),] # although the model with season*habitat interaction has a slightly better fit, the interaction is not significant, so continue with model with season and no interaction (glm3)
 
 # enter year covariate
-glm7 <- glm(ngroups~habitat+elevation++I(elevation^2)+season+year, family=poisson, data=sites, offset=log(sites$A))
+glm7 <- glm(ngroups~habitat+elevation+I(elevation^2)+season+year, family=poisson, data=sites, offset=log(sites$A))
 summary(glm7)
 
 AIC(glm3,glm7)
