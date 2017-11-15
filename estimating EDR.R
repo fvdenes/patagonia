@@ -1,9 +1,9 @@
-obs_fer <- read.csv("~/Dropbox/collaborations/patagonia/pat_obs_fer.csv") # Peter Mac
+#obs_fer <- read.csv("~/Dropbox/collaborations/patagonia/pat_obs_fer.csv") # Peter Mac
 
 obs_fer <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_obs_fer.csv") # Francisco Windows
-obs_fer <- read.csv("~/Dropbox/EBD/Loros Patagonia/pat_obs_fer.csv") # Francisco Mac
+#obs_fer <- read.csv("~/Dropbox/EBD/Loros Patagonia/pat_obs_fer.csv") # Francisco Mac
 
-#obs_lep <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_obs_lep.csv")
+obs_lep <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_obs_lep.csv")
 
 
 # E. ferrugineus
