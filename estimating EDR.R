@@ -248,3 +248,30 @@ AIC(glm3,glm7)
 anova(glm7)
 
 mep(glm7) # some diagnostic plots
+
+
+#### Models for group size ####
+plot(table(x$count))
+x$count
+str(x)
+x$A <- NA
+  
+  sites$A[which(sites$site%in%x$site)]
+
+for(i in 1:nrow(x)){
+  x$A[i] <- sites$A[which(sites$site==x$site[i])]
+}
+
+X <- model.matrix(~others+urban+A,x)
+Z <- model.matrix(~season, x)
+
+
+mod. <- vip(Y=x$count, X=X, Z=Z, V=2, truncate=TRUE)
+
+X <- model.matrix(~x, df)
+Z <- model.matrix(~z, df)
+
+mod <- vip(Y=y, X=X, Z=Z, V=2, truncate=TRUE)
+summary(mod)
+
+
