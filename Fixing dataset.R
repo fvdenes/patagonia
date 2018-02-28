@@ -2,8 +2,8 @@
 
 ## Load excel data data ####
 #mac
-pat_obs <- read.csv("~/Dropbox/EBD/Loros Patagonia/patagonia_obs.csv")
-pat_site <- read.csv("~/Dropbox/EBD/Loros Patagonia/patagonia_site.csv")
+#pat_obs <- read.csv("~/Dropbox/EBD/Loros Patagonia/patagonia_obs.csv")
+#pat_site <- read.csv("~/Dropbox/EBD/Loros Patagonia/patagonia_site.csv")
 #windows
 pat_obs <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/patagonia_obs.csv")
 pat_site <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/patagonia_site.csv")
@@ -83,6 +83,9 @@ pat_site$transect<-as.factor(pat_site$transect)
 
 head(pat_site)
 
+# remove sites with habitat.length.km=0
+which(pat_site$habitat.length.km==0)
+pat_site<-pat_site[-which(pat_site$habitat.length.km==0),]
 
 # removing updating sample unit identification
 str(pat_site)
@@ -94,8 +97,8 @@ str(pat_obs)
 head(pat_site,n=20)
 head(pat_obs,n=20)
 
-# remove observations of pat_obs without group size data, distance data
-
+# remove observations of pat_obs without group size data, distance data, site
+(pat_obs<- pat_obs[is.na(pat_obs$site)==FALSE,] )
 (pat_obs<- pat_obs[is.na(pat_obs$count)==FALSE,] )
 (pat_obs<- pat_obs[is.na(pat_obs$distance)==FALSE,] )
 (pat_obs <- pat_obs[-which(pat_obs$count==0),]) # remove obs with count=0
@@ -103,25 +106,30 @@ head(pat_obs,n=20)
 # Convert habitat covariate into model matrix
 levels(pat_site$habitat)
 habitat <- as.character(pat_site$habitat)
-habitat[which(habitat=="agroganadero")]<- "Agroganadero"
-pat_site$habitat<- as.factor(habitat)
+pat_site$habitat[which(pat_site$habitat=="agroganadero")]<- "Agroganadero"
+
 
 pat_site$habitat2<-pat_site$habitat # backup original habitat classification before simplification
 
 # Reducing habitat levels:
-# Araucaria + Aramix + Estepa + Matorral + Otros = Otros
-pat_site$habitat[which(pat_site$habitat=="Estepa")]<-"Otros"
-pat_site$habitat[which(pat_site$habitat=="Matorral")]<-"Otros"
-pat_site$habitat[which(pat_site$habitat=="Araucaria")]<-"Otros"
-pat_site$habitat[which(pat_site$habitat=="Aramix")]<-"Otros"
-pat_site$habitat[which(pat_site$habitat=="Noto")]<-"Otros"
+# Araucaria + Aramix + Estepa + Matorral + Otros = Other
+pat_site$habitat<- as.character(pat_site$habitat)
+pat_site$habitat[which(pat_site$habitat=="Estepa")]<-"Other"
+pat_site$habitat[which(pat_site$habitat=="Matorral")]<-"Other"
+pat_site$habitat[which(pat_site$habitat=="Araucaria")]<-"Other"
+pat_site$habitat[which(pat_site$habitat=="Aramix")]<-"Other"
+pat_site$habitat[which(pat_site$habitat=="Noto")]<-"Other"
+pat_site$habitat[which(pat_site$habitat=="Otros")]<-"Other"
 
-# Agroganadero + Agroforestal = Agroganadero
-pat_site$habitat[which(pat_site$habitat=="Agroforestal")]<-"Agroganadero"
+# Agroganadero + Agroforestal = Agropastoral
+pat_site$habitat[which(pat_site$habitat=="Agroforestal")]<-"Agropastoral"
+pat_site$habitat[which(pat_site$habitat=="Agroganadero")]<-"Agropastoral"
 
-pat_site$habitat <- as.character(pat_site$habitat)
+# urbano = Urban
+pat_site$habitat[which(pat_site$habitat=="Urbano")]<-"Urban"
+
 pat_site$habitat <- as.factor(pat_site$habitat)
-pat_site$habitat<-relevel(pat_site$habitat,"Araucaria")
+pat_site$habitat<-relevel(pat_site$habitat,"Other")
 
 
 my_matrix <- model.matrix(~ pat_site$habitat)
@@ -139,14 +147,14 @@ head(pat_site,n=20)
 head(pat_obs,n=100)
 pat_obs$t.length<-NA
 pat_obs$elevation<- NA
-pat_obs$others<-NA
-pat_obs$urban<-NA
+pat_obs$Agropastoral<-NA
+pat_obs$Urban<-NA
 
 for(i in 1:nrow(pat_obs)){
   pat_obs$t.length[i]<-pat_site$habitat.length.km[which(pat_site$site==pat_obs$site[i])]
   pat_obs$elevation[i]<- pat_site$elevation[which(pat_site$site==pat_obs$site[i])]
-  pat_obs$others[i]<- pat_site$Otros[which(pat_site$site==pat_obs$site[i])]
-  pat_obs$urban[i]<-pat_site$Urbano[which(pat_site$site==pat_obs$site[i])]
+  pat_obs$Agropastoral[i]<- pat_site$Agropastoral[which(pat_site$site==pat_obs$site[i])]
+  pat_obs$Urban[i]<-pat_site$Urban[which(pat_site$site==pat_obs$site[i])]
 }
 
 str(pat_obs)
