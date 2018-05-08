@@ -40,7 +40,7 @@ $(1-\phi) f(y; \lambda)$ otherwise.
 vip <-
 function(Y, X, Z, V=0,
 offsetx, offsetz, weights, linkz="logit",
-truncate=FALSE, ...) {
+truncate=FALSE, hessian=TRUE, method="Nelder-Mead", ...) {
     if (missing(Y))
         stop("C'mon, you must have some data?!")
     if (truncate && any(Y < 1))
@@ -93,10 +93,11 @@ truncate=FALSE, ...) {
 
     opt <- optim(rep(0, kx+kz), 
         if (truncate) nll_VIP_TR else nll_VIP_ML, 
-        hessian=TRUE, method="Nelder-Mead")
+        hessian=hessian, method=method, ...)
     par <- opt$par
     names(par) <- c(paste0("P_", colnames(X)), paste0("V_", colnames(Z)))
-    vc <- solve(opt$hessian)
+    vc <- if (hessian)
+        solve(opt$hessian) else matrix(NA, length(par), length(par))
     dimnames(vc) <- list(names(par), names(par))
     out <- list(call=match.call(),
         coefficients=par, loglik=-opt$value, vcov=vc, nobs=n,

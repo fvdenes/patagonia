@@ -251,12 +251,13 @@ for(i in 1:nrow(x)){
   x$A[i] <- sites$A[which(sites$site==x$site[i])]
 }
 
-X <- model.matrix(~Urban+Agropastoral+A,x)
+X <- model.matrix(~Urban+Agropastoral,x)
 Z <- model.matrix(~season, x)
 
 
-mod. <- vip(Y=x$count, X=X, Z=Z, V=2, truncate=TRUE)
-
+mod. <- vip(Y=x$count, X=X, offsetx=log(x$A), Z=Z, V=2, truncate=TRUE, hessian=TRUE, method="SANN")
+ 
+summary(mod.)
 
 
 #### # E. leptorhynchus ####
