@@ -36,11 +36,17 @@ $(1-\phi) f(y; \lambda)$ otherwise.
 
 ## Functions
 
+The `vip` function does the optimization. `method` argument can take values
+listed for `optim` and also `"DE"` for differential evolution algorithm.
+If there are convergence issues with `"Nelder-Mead"`, try `"SANN"` and `"DE"`.
+
 ```{r}
+library(DEoptim)
+library(Matrix)
 vip <-
 function(Y, X, Z, V=0,
 offsetx, offsetz, weights, linkz="logit",
-truncate=FALSE, hessian=TRUE, method="Nelder-Mead", ...) {
+truncate=FALSE, hessian=TRUE, method="Nelder-Mead", init=NULL, ...) {
     if (missing(Y))
         stop("C'mon, you must have some data?!")
     if (truncate && any(Y < 1))
@@ -90,17 +96,44 @@ truncate=FALSE, hessian=TRUE, method="Nelder-Mead", ...) {
             loglik <- -good.num.limit[2]
         -loglik
     }
+    .solvenear <-
+    function(x)
+    {
+        xinv <- try(solve(x), silent = TRUE)
+        if (inherits(xinv, "try-error"))
+            xinv <- as.matrix(solve(Matrix::nearPD(x)$mat))
+        xinv
+    }
+    if (is.null(init))
+        init <- rep(0, kx+kz)
+    nll <- if (truncate) nll_VIP_TR else nll_VIP_ML
 
-    opt <- optim(rep(0, kx+kz), 
-        if (truncate) nll_VIP_TR else nll_VIP_ML, 
-        hessian=hessian, method=method, ...)
-    par <- opt$par
-    names(par) <- c(paste0("P_", colnames(X)), paste0("V_", colnames(Z)))
-    vc <- if (hessian)
-        solve(opt$hessian) else matrix(NA, length(par), length(par))
+    if (method == "DE") {
+        DElimit <- 10
+        up <- rep(DElimit, length(init))
+        lo <- -up
+        opt <- DEoptim(fn=nll, lower=lo, upper=up,
+            control=list(trace=FALSE, itermax=length(init)*200))
+        par <- opt$optim$bestmem
+        ll <- -opt$optim$bestval
+        if (hessian) {
+            hess <- optimHess(opt$optim$bestmem, nll)
+            vc <- .solvenear(hess)
+        } else {
+            matrix(NA, length(par), length(par))
+        }
+    } else {
+        opt <- optim(init, nll,
+            hessian=hessian, method=method, ...)
+        par <- opt$par
+        names(par) <- c(paste0("P_", colnames(X)), paste0("V_", colnames(Z)))
+        vc <- if (hessian)
+            .solvenear(opt$hessian) else matrix(NA, length(par), length(par))
+        ll <- -opt$value
+    }
     dimnames(vc) <- list(names(par), names(par))
     out <- list(call=match.call(),
-        coefficients=par, loglik=-opt$value, vcov=vc, nobs=n,
+        coefficients=par, loglik=ll, vcov=vc, nobs=n,
         truncate=truncate)
     class(out) <- "vip"
     out
@@ -187,7 +220,7 @@ cbind(True=c(log_lam=log(lam), logit_phi=qlogis(phi)),
 
 ```{r}
 set.seed(123)
-n <- 10000
+n <- 1000
 x <- rnorm(n)
 df <- data.frame(x=x)
 X <- model.matrix(~x, df)
