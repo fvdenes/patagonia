@@ -1,0 +1,902 @@
+---
+title: "Patagonia parrots density analysis"
+author: "Francisco Dénes and Peter Sólymos"
+date: "June 2, 2018"
+output:
+  pdf_document:
+    fig_caption: yes
+    keep_tex: yes
+  word_document: default
+  html_document:
+    df_print: paged
+header-includes: \usepackage{float}
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,fig.pos = 'H')
+```
+
+# Motivation
+
+We want to model the density of the austral parakeet *Enicognathus ferrugineus* and the slender-billed parakeet *Enicognathus leptorhynchus* from count data obtained with road transect surveys in Patagonia. Because these parrots are gregarious, we want to assess whether group size and size of groups vary across habitats and between breeding (Nov-Dec) and non-breeding seasons (Jan-Oct).
+We use distance sampling methods to account for detectability of parrots.
+
+
+These animals tend to form smaller or larger groups, but groups of size 2 are also often observed as a result of mating pairs, as shown in Figure 1.
+
+```{r, echo=FALSE, fig.cap="\\textit{Enicognathus ferrugineus} count frequencies",out.extra=''}
+obs_fer <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_obs_fer.csv") 
+
+x <- as.data.frame(obs_fer)
+
+
+plot(table(x$count), ylab="Individuals")
+
+# new variable identifying pairs from other groups
+x$pair<-0
+x$pair[which(x$count==2)]<-1
+```
+
+# Austral parakeet *Enicognathus ferrugineus*
+
+##Estimating effective detection radius (EDR)
+
+We fit distance sampling models with detection predictor variables, including the average group size, the number of groups that were observed (to account for the possibility that grouping behaviour influences detectability), and also habitat type. We used forward-stepwise model selection, starting with single covariate models and eliminating  covariates that do not improve model parsimony (i.e. result in AIC lower than 2) in relation to the null model.
+
+```{r, echo=FALSE, warning=F,message=F}
+## Estimating effective detection radius (EDR) ####
+
+x$distance[x$distance == 500] <- 300 # correct outlier
+library(mefa4)
+library(detect)
+
+# Define distance bins
+br <- seq(0, 320, by=20)
+x$bin <- cut(x$distance, br,  include.lowest = TRUE)
+
+x$pres <- 1
+
+x$groupid <- 0
+for (i in unique(x$site)) {
+    ii <- x$site == i
+    x[ii, "groupid"] <- seq_len(sum(ii))
+}
+x$site_g <- paste0(x$site, "_", x$groupid)
+
+
+# Matrix with binned detection distances in each site
+Y <- as.matrix(Xtab(pres ~site + bin, x))
+
+# Dataframe for covariate vectors
+## sum of all inds in all groups
+X <- data.frame(ntot=rowSums(Xtab(count ~site + bin, x)))
+## number of pairs / site
+tmp <- aggregate(x[,c("pair"),drop=FALSE], list(Site=x$site), sum)
+stopifnot(all(rownames(X) == as.character(tmp$Site)))
+X$pair <- tmp$pair
+## number of groups / site
+tmp <- aggregate(x[,c("groupid"),drop=FALSE], list(Site=x$site), max)
+X$ngroups <- tmp$groupid
+## average group size = ntot / ngroups
+X$gavg <- X$ntot / X$ngroups
+## the rest is just repeated, so we take the unique values
+tmp <- nonDuplicated(x, site, TRUE)
+X <- data.frame(X, tmp[rownames(X), c("jdate", "Urban", "Agropastoral","site")])
+
+
+
+D <- matrix(br[-1], nrow(Y), length(br)-1, byrow=TRUE)
+rownames(X) <- rownames(D) <- rownames(Y)
+colnames(D) <- colnames(Y)
+```
+
+
+```{r, echo=FALSE, warning=F,message=F}
+EDR.null <- cmulti(Y | D ~1, type="dis")
+#summary(EDR.null)
+
+EDR.avggroupsize <- cmulti(Y | D ~ gavg, X, type="dis")
+#summary(EDR.avggroupsize)
+
+
+EDR.numbergroups <- cmulti(Y | D ~ ngroups, X, type = "dis")
+#summary(EDR.numbergroups)
+
+EDR.habitatype <- cmulti(Y | D ~ Urban + Agropastoral, X, type = "dis")
+
+
+library(knitr)
+
+kable(cbind(AIC(EDR.null,EDR.avggroupsize,EDR.numbergroups,EDR.habitatype)[order(AIC(EDR.null,EDR.avggroupsize,EDR.numbergroups,EDR.habitatype)$AIC),],dAIC=round(AIC(EDR.null,EDR.avggroupsize,EDR.numbergroups,EDR.habitatype)[order(AIC(EDR.null,EDR.avggroupsize,EDR.numbergroups,EDR.habitatype)$AIC),2]-AIC(EDR.habitatype),2)),caption ="\\textit{E. ferrugineous} EDR models AIC")
+```
+
+The model (`EDR.habitatype`) has the lowest AIC (Table 1), indicating that habitat type affects the effective detection radius (EDR) of *Enicognathus ferrugineus*. Specifically, detection radius is higher in agropastoral than urban and other habitats (Table 2). This means that detectability is higher in agropastoral habitats, and also that the area surveyed in a given sample unit is larger if the habitat therein is agropastoral vs. urban or other, presubably because it is possible to see further in pastures and planted fields than in forest or urban environments.
+```{r, echo=FALSE, warning=F,message=F}
+summary(EDR.habitatype)
+
+kable(data.frame("Habitat"=c("Other","Urban","Agropastoral"), EDR= c( exp(coef(EDR.habitatype))[1],exp(sum(coef(EDR.habitatype)[1:2])),exp(sum(coef(EDR.habitatype)[c(1,3)])))),caption="\\textit{E. ferrugineous} habitat-specific EDR (m)")
+
+```
+
+
+# Models for number of groups 
+
+We then model the number of groups as a function of covariates. The model for number of groups is G~i~ ~ Poisson(D~i~A~i~), where D~i~ = covariates and A~i~ = area sampled in site. A~i~ is calculated using the habitat-specific estimated EDR, and is added to the model as an offset. We build a first set of models to evaluate the effect of covariates related to habitat (habitat type and elevation).
+
+```{r, echo=FALSE, warning=F,message=F, fig.cap="\\textit{Enicognathus ferrugineus} group numbers ",out.extra=''}
+## Estimating area surveyed for each site (km^2^), using the EDR for the respective habitat. The area surveyed is used subsequently to estimate densities.
+sites <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_site.csv")
+
+
+sites$A <- sites$habitat.length.km*(2*exp(coef(EDR.habitatype))[1]/1000)
+for (i in 1:nrow(sites)){
+  if (sites$habitat[i]=="Urban"){
+    sites$A[i] <- sites$habitat.length.km[i]*(2*exp(sum(coef(EDR.habitatype)[1:2]))/1000)
+  }
+  if (sites$habitat[i]=="Agropastoral"){
+    sites$A[i] <- sites$habitat.length.km[i]*(2*exp(sum(coef(EDR.habitatype)[c(1,3)]))/1000)
+  }
+}
+
+sites$ngroups<- 0
+sites$ngroups[which(sites$site%in%X$site)]<-X$ngroups
+
+sites <- sites[!is.na(sites$A) & sites$habitat.length.km>0,]
+
+plot(table(sites$ngroups), ylab="Number of groups")
+
+```
+
+
+```{r, echo=FALSE, warning=F,message=F}
+ngroup.hab <- glm(ngroups~habitat, family=poisson, data=sites, offset=log(sites$A))
+
+ngroup.ele <- glm(ngroups~elevation, family=poisson, data=sites, offset=log(sites$A))
+
+ngroup.ele2 <- glm(ngroups~elevation+I(elevation^2), family=poisson, data=sites, offset=log(sites$A))
+
+ngroup.hab.ele <- glm(ngroups~habitat+elevation, family=poisson, data=sites, offset=log(sites$A))
+
+ngroup.hab.ele2 <- glm(ngroups~habitat+elevation+I(elevation^2), family=poisson, data=sites, offset=log(sites$A))
+
+kable(cbind(AIC(ngroup.hab,ngroup.ele,ngroup.hab.ele,ngroup.ele2,ngroup.hab.ele2)[order(AIC(ngroup.hab,ngroup.ele,ngroup.hab.ele,ngroup.ele2,ngroup.hab.ele2)$AIC),],dAIC=round(AIC(ngroup.hab,ngroup.ele,ngroup.hab.ele,ngroup.ele2,ngroup.hab.ele2)[order(AIC(ngroup.hab,ngroup.ele,ngroup.hab.ele,ngroup.ele2,ngroup.hab.ele2)$AIC),2]-AIC(ngroup.hab.ele2),2)),caption ="\\textit{E. ferrugineous} number of group models")
+```
+
+\hfill\break
+  
+The model with both habitat type and elevation (quadratic effect) has the lowest AIC (Table 3), indicating that both covariates affect the number of groups:
+
+```{r, echo=FALSE, warning=F,message=F}
+summary(ngroup.hab.ele)
+anova(ngroup.hab.ele)
+
+```
+
+We then proceed by adding within-year temporal covariates (breeding/non-breeding season and julian date) and their interactions with habitat.
+
+```{r, echo=FALSE, warning=F,message=F}
+ngroup.hab.ele.season <- glm(ngroups~habitat+elevation+I(elevation^2)+season, family=poisson, data=sites, offset=log(sites$A))
+
+ngroup.hab.ele.jdate <- glm(ngroups~habitat+elevation+I(elevation^2)+jdate, family=poisson, data=sites, offset=log(sites$A))
+
+ngroup.habXseason.ele <- glm(ngroups~elevation+I(elevation^2)+habitat*season, family=poisson, data=sites, offset=log(sites$A))
+
+ngroup.habXjdate.ele <- glm(ngroups~elevation+I(elevation^2)+habitat*jdate, family=poisson, data=sites, offset=log(sites$A))
+
+
+kable(cbind(AIC(ngroup.hab.ele,ngroup.hab.ele.season,ngroup.hab.ele.jdate,ngroup.habXseason.ele,ngroup.habXjdate.ele)[order(AIC(ngroup.hab.ele,ngroup.hab.ele.season,ngroup.hab.ele.jdate,ngroup.habXseason.ele,ngroup.habXjdate.ele)$AIC),],dAIC=round(AIC(ngroup.hab.ele,ngroup.hab.ele.season,ngroup.hab.ele.jdate,ngroup.habXseason.ele,ngroup.habXjdate.ele)[order(AIC(ngroup.hab.ele,ngroup.hab.ele.season,ngroup.hab.ele.jdate,ngroup.habXseason.ele,ngroup.habXjdate.ele)$AIC),2]-AIC(ngroup.habXseason.ele),2)), caption="\\textit{E. ferrugineous} number of group models (within-year temporal predictors) AIC")
+
+```
+
+Model with season*habitat interaction is equally parcimonious with the model with only the additive effects. Given these are nested models, this indicates the interaction only marginally improves the model fit, so will continue with model with season and no interaction:
+
+### season*habitat interaction model
+```{r, echo=FALSE, warning=F,message=F}
+summary(ngroup.habXseason.ele)
+```
+
+### no interaction between season and habitat
+```{r, echo=FALSE, warning=F,message=F}
+
+summary(ngroup.hab.ele.season)
+```
+
+Finally, we assess year effects by adding a year covariate (2013-2016).
+```{r, echo=FALSE, warning=F,message=F}
+ngroup.hab.ele.season.year <- glm(ngroups~habitat+elevation+I(elevation^2)+season+as.factor(year), family=poisson, data=sites, offset=log(sites$A))
+
+kable(cbind(AIC(ngroup.hab.ele.season,ngroup.hab.ele.season.year)[order(AIC(ngroup.hab.ele.season,ngroup.hab.ele.season.year)$AIC),],dAIC=round(AIC(ngroup.hab.ele.season,ngroup.hab.ele.season.year)[order(AIC(ngroup.hab.ele.season,ngroup.hab.ele.season.year)$AIC),2]-AIC(ngroup.hab.ele.season.year),2)),caption ="\\textit{E. ferrugineous} number of group models (year predictor) AIC table")
+```
+
+The model with lowest AIC indicates that the number of groups is affected by habitat ype, elevation, season (breeding/non breeding) and year.
+
+```{r, echo=FALSE, warning=F,message=F}
+summary(ngroup.hab.ele.season.year)
+anova(ngroup.hab.ele.season.year)
+```
+
+# Models for group size 
+The count distribution is characterized with a spike at 2 (Figure 1), and by the
+absence of 0s due to group size being conditional on having >0 birds to consider
+it a group.
+
+We start developing a general V-Inflated Poisson (VIP) model ("V" stands for variable, in refence to the "Z" representing 0 in a zero-inflated model, or ZIP), then we add the >0 condition.
+
+
+## Maximum likelihood
+
+Let $Y$ be a random variable, and $y$ are observations, $V$ is the count value
+that has some extra probability mass ($V=0$ is the ZIP model), $f(y; \lambda)$
+is the Poisson density ($f(y; \lambda) = e^{-\lambda} \frac{\lambda^{y}}{y!}$).
+
+The V-Inflated density can be written as $P(Y=y) = \phi I(Y=V) + (1-\phi) f(y; \lambda)$
+which is $\phi + (1-\phi) f(V; \lambda)$ when $Y=V$ and
+$(1-\phi) f(y; \lambda)$ otherwise.
+
+R functions for the VIP model are presented at the end of this document. Simulations are done to check the estimating procedure.
+
+```{r, echo=F}
+vip <-
+function(Y, X, Z, V=0,
+offsetx, offsetz, weights, linkz="logit",
+truncate=FALSE, hessian=TRUE, method="Nelder-Mead", init=NULL, ...) {
+    if (missing(Y))
+        stop("C'mon, you must have some data?!")
+    if (truncate && any(Y < 1))
+        stop("Y must be >0 when truncate=TRUE")
+    n <- length(Y)
+    id0 <- Y == V
+    id1 <- !id0
+    if (missing(X)) {
+        X <- matrix(1, n, 1)
+        colnames(X) <- "(Intercept)"
+    }
+    if (missing(Z)) {
+        Z <- matrix(1, n, 1)
+        colnames(Z) <- "(Intercept)"
+    }
+    kx <- ncol(X)
+    kz <- ncol(Z)
+    if (missing(offsetx))
+        offsetx <- 0
+    if (missing(offsetz))
+        offsetz <- 0
+    if (missing(weights))
+        weights <- rep(1, n)
+    linkinvx <- poisson("log")$linkinv
+    linkinvz <- binomial(linkz)$linkinv
+    good.num.limit <- c(.Machine$double.xmin, .Machine$double.xmax)^(1/3)
+
+    ## VIP model full likelihood
+    nll_VIP_ML <- function(parms) {
+        mu <- as.vector(linkinvx(X %*% parms[1:kx] + offsetx))
+        phi <- as.vector(linkinvz(Z %*% parms[(kx + 1):(kx + kz)] + offsetz))
+        loglik0 <- log(phi + (1 - phi) * dpois(V, lambda = mu, log = FALSE))
+        loglik1 <- log(1 - phi) + dpois(Y, lambda = mu, log = TRUE)
+        loglik <- sum(weights[id0] * loglik0[id0]) + sum(weights[id1] * loglik1[id1])
+        if (!is.finite(loglik) || is.na(loglik))
+            loglik <- -good.num.limit[2]
+        -loglik
+    }
+    ## 0-truncated VIP model full likelihood
+    nll_VIP_TR <- function(parms) {
+        mu <- as.vector(linkinvx(X %*% parms[1:kx] + offsetx))
+        phi <- as.vector(linkinvz(Z %*% parms[(kx + 1):(kx + kz)] + offsetz))
+        loglik0 <- log(phi + (1 - phi) * dpois(V, lambda = mu, log = FALSE) / (1-exp(-mu)))
+        loglik1 <- log((1 - phi) * dpois(Y, lambda = mu, log = FALSE) / (1-exp(-mu)))
+        loglik <- sum(weights[id0] * loglik0[id0]) + sum(weights[id1] * loglik1[id1])
+        if (!is.finite(loglik) || is.na(loglik))
+            loglik <- -good.num.limit[2]
+        -loglik
+    }
+
+    if (is.null(init))
+      init <- rep(0, kx+kz)
+    opt <- optim(init, 
+        if (truncate) nll_VIP_TR else nll_VIP_ML, 
+        hessian=hessian, method=method, ...)
+    par <- opt$par
+    names(par) <- c(paste0("P_", colnames(X)), paste0("V_", colnames(Z)))
+    vc <- if (hessian)
+        solve(opt$hessian) else matrix(NA, length(par), length(par))
+    dimnames(vc) <- list(names(par), names(par))
+    out <- list(call=match.call(),
+        coefficients=par, loglik=-opt$value, vcov=vc, nobs=n,
+        truncate=truncate)
+    class(out) <- "vip"
+    out
+}
+vcov.vip <- function(object, ...) object$vcov
+logLik.vip <- function (object, ...)
+    structure(object$loglik, df = object$nobs - length(object$coef),
+        nobs = object$nobs, class = "logLik")
+summary.vip <- function (object, ...) {
+    k <- length(object$coefficients)
+    coefs <- coef(object)
+    se <- sqrt(diag(vcov(object)))
+    tstat <- coefs/se
+    pval <- 2 * pnorm(-abs(tstat))
+    coefs <- cbind(coefs, se, tstat, pval)
+    colnames(coefs) <- c("Estimate", "Std. Error", "z value", "Pr(>|z|)")
+    coefs <- coefs[1:k, , drop = FALSE]
+    rownames(coefs) <- names(coef(object))
+    out <- list(call = object$call, coefficients=coefs, loglik = object$loglik,
+        bic=BIC(object), truncate=object$truncate)
+    class(out) <- "summary.vip"
+    return(out)
+}
+print.summary.vip <- function (x, digits, ...)
+{
+    if (missing(digits))
+        digits <- max(3, getOption("digits") - 3)
+    cat("\nCall:", deparse(x$call,
+        width.cutoff = floor(getOption("width") * 0.85)), "", sep = "\n")
+    cat("V-Inflated", if (x$truncate) "(Zero-Truncated)" else "", "Poisson Model\n\n")
+    cat(paste("Coefficients:\n", sep = ""))
+    printCoefmat(x$coefficients, digits = digits, signif.legend = FALSE)
+    if (!any(is.na(array(x$coefficients)))) {
+        if (getOption("show.signif.stars") & any(x$coefficients[,4] < 0.1))
+            cat("---\nSignif. codes: ", "0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1", "\n")
+    }
+    cat("\nLog-likelihood:", formatC(x$loglik, digits = digits),
+        "\nBIC =", formatC(x$bic, digits = digits), "\n")
+    cat("\n")
+    invisible(x)
+}
+confint.vip <-
+function (object, parm, level = 0.95, ...)
+{
+    cf <- coef(object)
+    pnames <- names(cf)
+    if (missing(parm)) {
+        parm <- pnames
+    } else {
+        if (is.numeric(parm))
+            parm <- pnames[parm]
+    }
+    a <- (1 - level)/2
+    a <- c(a, 1 - a)
+    pct <- paste(format(100 * a, trim = TRUE, scientific = FALSE, digits = 3), "%", sep="")
+    ci <- array(NA, dim = c(length(parm), 2), dimnames = list(parm, pct))
+    fac <- qnorm(a)
+    ses <- sqrt(diag(vcov(object, model, type)))
+    ci[] <- cf[parm] + ses[parm] %o% fac
+    ci
+}
+```
+
+We define the extra probability mass at `V=2` to account for the group size peak in pairs. The model is also truncated at 0, because there are no groups with 0 individuals. We include habitat type as a covariate for the count (Poisson) component, and compare models with and without season (breeding/non-breeding) as a covariate for the V-inflation probability.
+
+```{r, echo=FALSE, warning=F,message=F}
+x$A <- NA
+for(i in 1:nrow(x)){
+  x$A[i] <- sites$A[which(sites$site==x$site[i])]
+}
+
+
+
+X <- model.matrix(~Urban+Agropastoral,x)
+Z <- model.matrix(~season, x)
+
+
+
+set.seed(333)
+VIP.habitat.season <- vip(Y=x$count, X=X, offsetx=log(x$A), V=2, Z=Z, truncate=TRUE, hessian=TRUE, method="SANN")
+
+set.seed(191)
+VIP.habitat <- vip(Y=x$count, X=X, offsetx=log(x$A), V=2, truncate=TRUE, hessian=TRUE, method="SANN")
+
+
+kable(cbind(AIC(VIP.habitat.season,VIP.habitat)[order(AIC(VIP.habitat.season,VIP.habitat)$AIC),],dAIC=round(AIC(VIP.habitat.season,VIP.habitat)[order(AIC(VIP.habitat.season,VIP.habitat)$AIC),2]-AIC(VIP.habitat.season),2)),caption ="\\textit{E. ferrugineous} Group size models AIC table")
+
+
+summary(VIP.habitat.season)
+
+```
+
+The model with season is more parsimonious (Table 6). Estimated model coefficients indicate that group sizes are larger in urban ($\beta$ = 1.75) and agropastoral ($\beta$ = 0.61) habitats when compared to other natural habitats. Moreover, the probability of there being extra pairs (i.e. the V-inflation probability, $\phi$) is smaller in the non-breeding season ($\beta$ = -3.47). 
+
+***
+# Slender-billed parakeet *Enicognathus leptorhynchus*
+```{r, echo=FALSE, fig.cap="\\textit{Enicognathus leptorhynchus} count frequencies",out.extra=''}
+obs_lep <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_obs_lep.csv")
+x <- as.data.frame(obs_lep)
+
+plot(table(x$count), ylab="Individuals")
+
+# new variable identifying pairs from other groups
+x$pair<-0
+x$pair[which(x$count==2)]<-1
+```
+
+##Estimating effective detection radius (EDR)
+
+```{r, echo=FALSE, warning=F,message=F}
+## Estimating effective detection radius (EDR) ####
+
+x$distance[x$distance == 2000] <- 1000 # correct outlier
+
+
+# Define distance bins
+br <- seq(0, 1100, by=100)
+x$bin <- cut(x$distance, br,  include.lowest = TRUE)
+
+x$pres <- 1
+
+x$groupid <- 0
+for (i in unique(x$site)) {
+    ii <- x$site == i
+    x[ii, "groupid"] <- seq_len(sum(ii))
+}
+x$site_g <- paste0(x$site, "_", x$groupid)
+
+
+# Matrix with binned detection distances in each site
+Y <- as.matrix(Xtab(pres ~site + bin, x))
+
+# Dataframe for covariate vectors
+## sum of all inds in all groups
+X <- data.frame(ntot=rowSums(Xtab(count ~site + bin, x)))
+## number of pairs / site
+tmp <- aggregate(x[,c("pair"),drop=FALSE], list(Site=x$site), sum)
+stopifnot(all(rownames(X) == as.character(tmp$Site)))
+X$pair <- tmp$pair
+## number of groups / site
+tmp <- aggregate(x[,c("groupid"),drop=FALSE], list(Site=x$site), max)
+X$ngroups <- tmp$groupid
+## average group size = ntot / ngroups
+X$gavg <- X$ntot / X$ngroups
+## the rest is just repeated, so we take the unique values
+tmp <- nonDuplicated(x, site, TRUE)
+X <- data.frame(X, tmp[rownames(X), c("jdate", "Urban", "Agropastoral","site")])
+
+
+
+D <- matrix(br[-1], nrow(Y), length(br)-1, byrow=TRUE)
+rownames(X) <- rownames(D) <- rownames(Y)
+colnames(D) <- colnames(Y)
+```
+
+
+```{r, echo=FALSE, warning=F,message=F}
+EDR.null <- cmulti(Y | D ~1, type="dis")
+#summary(EDR.null)
+
+EDR.avggroupsize <- cmulti(Y | D ~ gavg, X, type="dis")
+#summary(EDR.avggroupsize)
+
+EDR.numbergroups <- cmulti(Y | D ~ ngroups, X, type = "dis")
+#summary(EDR.numbergroups)
+
+EDR.habitatype <- cmulti(Y | D ~ Urban + Agropastoral, X, type = "dis")
+#summary(EDR.habitatype)
+
+EDR.avggroupsize.habitat <- cmulti(Y | D ~ gavg + Urban + Agropastoral, X, type="dis")
+#summary(EDR.avggroupsize.habitat)
+
+EDR.avggroupsize.numbergroups <- cmulti(Y | D ~ gavg + ngroups, X, type="dis")
+#summary(EDR.avggroupsize.numbergroups)
+
+EDR.habitat.numbergroups <- cmulti(Y | D ~ Urban + Agropastoral + ngroups, X, type="dis")
+#summary(EDR.habitat.numbergroups)
+
+EDR.habitat.avggroupsize.numbergroups <- cmulti(Y | D ~ Urban + Agropastoral +gavg + ngroups, X, type="dis")
+#summary(EDR.habitat.avggroupsize.numbergroups)
+
+
+kable(cbind(AIC(EDR.null,EDR.avggroupsize,EDR.numbergroups,EDR.habitatype,EDR.avggroupsize.habitat,EDR.avggroupsize.numbergroups,EDR.habitat.numbergroups,EDR.habitat.avggroupsize.numbergroups)[order(AIC(EDR.null,EDR.avggroupsize,EDR.numbergroups,EDR.habitatype,EDR.avggroupsize.habitat,EDR.avggroupsize.numbergroups,EDR.habitat.numbergroups,EDR.habitat.avggroupsize.numbergroups)$AIC),],dAIC=round(AIC(EDR.null,EDR.avggroupsize,EDR.numbergroups,EDR.habitatype,EDR.avggroupsize.habitat,EDR.avggroupsize.numbergroups,EDR.habitat.numbergroups,EDR.habitat.avggroupsize.numbergroups)[order(AIC(EDR.null,EDR.avggroupsize,EDR.numbergroups,EDR.habitatype,EDR.avggroupsize.habitat,EDR.avggroupsize.numbergroups,EDR.habitat.numbergroups,EDR.habitat.avggroupsize.numbergroups)$AIC),2]-AIC(EDR.avggroupsize.habitat),2)),caption ="\\textit{E. ferrugineous} EDR models AIC")
+```
+
+The model (`EDR.avggroupsize.habitat`) has the lowest AIC (Table 7), indicating that habitat type and average group size affect the effective detection radius (EDR) of *Enicognathus leptorhynchus*. The mean EDR for each habitat, predicted using model coefficients and the habitat-specific means of average group size, is shown in Table 8.
+```{r, echo=FALSE, warning=F,message=F}
+summary(EDR.avggroupsize.habitat)
+
+gsizemeansbyhab<-aggregate(X$gavg,by=list(X$Urban,X$Agropastoral),mean)
+
+
+otherEDR<-exp(sum(coef(EDR.avggroupsize.habitat)[1],coef(EDR.avggroupsize.habitat)[2]*gsizemeansbyhab[1,3]))
+urbanEDR<-exp(sum(coef(EDR.avggroupsize.habitat)[1:2],coef(EDR.avggroupsize.habitat)[2]*gsizemeansbyhab[2,3]))
+agropastoralEDR<-exp(sum(coef(EDR.avggroupsize.habitat)[c(1,3)],coef(EDR.avggroupsize.habitat)[2]*gsizemeansbyhab[3,3]))
+
+kable(data.frame("Habitat"=c("Other","Urban","Agropastoral"), EDR= c(otherEDR,urbanEDR,agropastoralEDR)) ,caption="\\textit{E. leptorhynchus} habitat-specific mean EDR (m)")
+
+```
+
+
+# Models for number of groups 
+
+```{r, echo=FALSE, warning=F,message=F, fig.cap="\\textit{Enicognathus leptorhynchus} group numbers ",out.extra=''}
+## Estimating area surveyed for each site (km^2^), using the EDR for the respective habitat. The area surveyed is used subsequently to estimate densities.
+sites <- read.csv("C:/Users/voeroesd/Dropbox/EBD/Loros Patagonia/pat_site.csv")
+
+sites$gavg<-0
+sites$gavg[which(sites$site%in%X$site)]<-X$gavg
+
+sites$A <- NA
+for (i in 1:nrow(sites)){
+  if (sites$habitat[i]=="Other"){
+    sites$A[i] <- sites$habitat.length.km[i]*(2*exp(sum(coef(EDR.avggroupsize.habitat)[1],coef(EDR.avggroupsize.habitat)[2]*sites$gavg[i]))/1000)
+  }
+  if (sites$habitat[i]=="Urban"){
+    sites$A[i] <- sites$habitat.length.km[i]*(2*exp(sum(coef(EDR.avggroupsize.habitat)[c(1,3)],coef(EDR.avggroupsize.habitat)[2]*sites$gavg[i]))/1000)
+  }
+  if (sites$habitat[i]=="Agropastoral"){
+    sites$A[i] <- sites$habitat.length.km[i]*(2*exp(sum(coef(EDR.avggroupsize.habitat)[c(1,4)],coef(EDR.avggroupsize.habitat)[2]*sites$gavg[i]))/1000)
+  }
+}
+
+sites$ngroups<- 0
+sites$ngroups[which(sites$site%in%X$site)]<-X$ngroups
+
+
+
+sites <- sites[!is.na(sites$A) & sites$habitat.length.km>0,]
+
+plot(table(sites$ngroups), ylab="Number of groups")
+
+```
+
+First set of models to evaluate the effect of covariates related to habitat (habitat type and elevation):
+
+```{r, echo=FALSE, warning=F,message=F}
+ngroup.hab <- glm(ngroups~habitat, family=poisson, data=sites, offset=log(sites$A))
+
+
+ngroup.ele <- glm(ngroups~elevation, family=poisson, data=sites, offset=log(sites$A))
+
+ngroup.ele2 <- glm(ngroups~elevation+I(elevation^2), family=poisson, data=sites, offset=log(sites$A))
+
+ngroup.hab.ele <- glm(ngroups~habitat+elevation, family=poisson, data=sites, offset=log(sites$A))
+
+ngroup.hab.ele2 <- glm(ngroups~habitat+elevation+I(elevation^2), family=poisson, data=sites, offset=log(sites$A))
+
+kable(cbind(AIC(ngroup.hab,ngroup.ele,ngroup.hab.ele,ngroup.ele2,ngroup.hab.ele2)[order(AIC(ngroup.hab,ngroup.ele,ngroup.hab.ele,ngroup.ele2,ngroup.hab.ele2)$AIC),],dAIC=round(AIC(ngroup.hab,ngroup.ele,ngroup.hab.ele,ngroup.ele2,ngroup.hab.ele2)[order(AIC(ngroup.hab,ngroup.ele,ngroup.hab.ele,ngroup.ele2,ngroup.hab.ele2)$AIC),2]-AIC(ngroup.hab.ele),2)),caption ="\\textit{E. leptorhynchus} number of group models")
+```
+
+The models with and habitat type and elevation (linear effect)habitat type and elevation (quadratic effect) are equally parsimonious (Table 9). Given their nestedness, we drop the quadratic elevation effect and continue with the model with habitat and linear elevation effects.
+
+```{r, echo=FALSE, warning=F,message=F}
+summary(ngroup.hab.ele)
+anova(ngroup.hab.ele)
+
+```
+
+
+Adding within-year temporal covariates (breeding/non-breeding season and julian date) and their interactions with habitat:
+
+```{r, echo=FALSE, warning=F,message=F}
+ngroup.hab.ele.season <- glm(ngroups~habitat+elevation+season, family=poisson, data=sites, offset=log(sites$A))
+
+ngroup.hab.ele.jdate <- glm(ngroups~habitat+elevation+jdate, family=poisson, data=sites, offset=log(sites$A))
+
+ngroup.habXseason.ele <- glm(ngroups~elevation+habitat*season, family=poisson, data=sites, offset=log(sites$A))
+
+ngroup.habXjdate.ele <- glm(ngroups~elevation+habitat*jdate, family=poisson, data=sites, offset=log(sites$A))
+
+
+kable(cbind(AIC(ngroup.hab.ele,ngroup.hab.ele.season,ngroup.hab.ele.jdate,ngroup.habXseason.ele,ngroup.habXjdate.ele)[order(AIC(ngroup.hab.ele,ngroup.hab.ele.season,ngroup.hab.ele.jdate,ngroup.habXseason.ele,ngroup.habXjdate.ele)$AIC),],dAIC=round(AIC(ngroup.hab.ele,ngroup.hab.ele.season,ngroup.hab.ele.jdate,ngroup.habXseason.ele,ngroup.habXjdate.ele)[order(AIC(ngroup.hab.ele,ngroup.hab.ele.season,ngroup.hab.ele.jdate,ngroup.habXseason.ele,ngroup.habXjdate.ele)$AIC),2]-AIC(ngroup.habXjdate.ele),2)), caption="\\textit{E. leptorhynchus} number of group models (within-year temporal predictors) AIC")
+```
+
+The model with jdate*habitat interaction has the lowest AIC (Table 9).
+
+### season*habitat interaction model
+```{r, echo=FALSE, warning=F,message=F}
+summary(ngroup.habXjdate.ele)
+```
+
+Assess year effects by adding a year covariate (2013-2016).
+```{r, echo=FALSE, warning=F,message=F}
+ngroup.habXjdate.ele.year <- glm(ngroups~habitat+elevation+season+as.factor(year), family=poisson, data=sites, offset=log(sites$A))
+
+kable(cbind(AIC(ngroup.habXjdate.ele,ngroup.habXjdate.ele.year)[order(AIC(ngroup.habXjdate.ele,ngroup.habXjdate.ele.year)$AIC),],dAIC=round(AIC(ngroup.habXjdate.ele,ngroup.habXjdate.ele.year)[order(AIC(ngroup.habXjdate.ele,ngroup.habXjdate.ele.year)$AIC),2]-AIC(ngroup.habXjdate.ele.year),2)),caption ="\\textit{E. leptorhynchus} number of group models (year predictor) AIC table")
+```
+
+The model with lowest AIC indicates that the number of groups is affected by habitat type, elevation, julian date and year.
+
+```{r, echo=FALSE, warning=F,message=F}
+summary(ngroup.habXjdate.ele.year)
+anova(ngroup.habXjdate.ele.year)
+```
+
+
+# Models for group size 
+
+```{r, echo=FALSE, warning=F,message=F}
+x$A <- NA
+for(i in 1:nrow(x)){
+  x$A[i] <- sites$A[which(sites$site==x$site[i])]
+}
+
+x<-x[which(x$count<1200),]
+row.names(x)<-1:nrow(x)
+
+X <- model.matrix(~Urban+Agropastoral,x)
+Z <- model.matrix(~season, x)
+
+VIP.habitat.season <- vip(Y=x$count, X=X, offsetx=log(x$A), V=2, Z=Z, truncate=TRUE, hessian=F, method="SANN", init=c(coef(glm(x$count~x$Urban+x$Agropastoral,family=poisson)),0,0))
+
+summary(VIP.habitat.season)
+```
+
+Model-fitting function cannot estimate coefficient standard errors due to sigular Hessian matrix. We can calculate confidence intervals based on quantiles using bootstrap (with n=250):
+
+```{r, echo=FALSE, warning=F,message=F}
+## Bootstrapping for the model:
+
+dflist<-as.list(rep(NA,250))
+
+bootsample<-function(df){
+  non.breeding<-x[which(x$season=="non-breeding"),]
+  row.names(non.breeding)<-1:nrow(non.breeding)
+  sample.non.breeding<-non.breeding[sample(nrow(non.breeding),size=385,replace = TRUE),]
+  
+  breeding<-x[which(x$season=="breeding"),]
+  row.names(breeding)<-1:nrow(breeding)
+  sample.breeding<-breeding[sample(nrow(breeding),size=33,replace = TRUE),]
+  
+  rbind(sample.non.breeding,sample.breeding)
+}
+
+dflist<-lapply(dflist,bootsample)
+
+# fit model to all bootstrap samples:
+VIP.model.fun<-function(df){
+  X <- model.matrix(~Urban+Agropastoral,df)
+  Z <- model.matrix(~season, df)
+  
+  inits<-c(coef(glm(x$count~x$Urban+x$Agropastoral,family=poisson)),0,0)
+  
+  VIP.habitat.season <- vip(Y=df$count, X=X, offsetx=log(df$A), V=2, Z=Z, truncate=TRUE, hessian=F, method="SANN", init=inits)
+}
+
+VIPs<-lapply(dflist,VIP.model.fun)
+
+
+# get means from coefs, and CI based on quantiles
+VIP.boot.coefs<-mapply(FUN=function(x){coef(x)},VIPs)
+
+
+phi<-VIP.boot.coefs-coef(VIP.habitat.season)
+
+coefCIs<-t(rbind((coef(VIP.habitat.season)),apply(phi,1,quantile,probs=c(0.05,0.95))))
+colnames(coefCIs)[1]<-"EStimate"
+
+kable(coefCIs,caption ="Estimated coefficients and 90% CI for\\textit{E. leptorhynchus} group size models")
+
+```
+
+***
+# VIP model - R functions and simulations
+
+```{r}
+vip <-
+function(Y, X, Z, V=0,
+offsetx, offsetz, weights, linkz="logit",
+truncate=FALSE, hessian=TRUE, method="Nelder-Mead", init=NULL, ...) {
+    if (missing(Y))
+        stop("C'mon, you must have some data?!")
+    if (truncate && any(Y < 1))
+        stop("Y must be >0 when truncate=TRUE")
+    n <- length(Y)
+    id0 <- Y == V
+    id1 <- !id0
+    if (missing(X)) {
+        X <- matrix(1, n, 1)
+        colnames(X) <- "(Intercept)"
+    }
+    if (missing(Z)) {
+        Z <- matrix(1, n, 1)
+        colnames(Z) <- "(Intercept)"
+    }
+    kx <- ncol(X)
+    kz <- ncol(Z)
+    if (missing(offsetx))
+        offsetx <- 0
+    if (missing(offsetz))
+        offsetz <- 0
+    if (missing(weights))
+        weights <- rep(1, n)
+    linkinvx <- poisson("log")$linkinv
+    linkinvz <- binomial(linkz)$linkinv
+    good.num.limit <- c(.Machine$double.xmin, .Machine$double.xmax)^(1/3)
+
+    ## VIP model full likelihood
+    nll_VIP_ML <- function(parms) {
+        mu <- as.vector(linkinvx(X %*% parms[1:kx] + offsetx))
+        phi <- as.vector(linkinvz(Z %*% parms[(kx + 1):(kx + kz)] + offsetz))
+        loglik0 <- log(phi + (1 - phi) * dpois(V, lambda = mu, log = FALSE))
+        loglik1 <- log(1 - phi) + dpois(Y, lambda = mu, log = TRUE)
+        loglik <- sum(weights[id0] * loglik0[id0]) + sum(weights[id1] * loglik1[id1])
+        if (!is.finite(loglik) || is.na(loglik))
+            loglik <- -good.num.limit[2]
+        -loglik
+    }
+    ## 0-truncated VIP model full likelihood
+    nll_VIP_TR <- function(parms) {
+        mu <- as.vector(linkinvx(X %*% parms[1:kx] + offsetx))
+        phi <- as.vector(linkinvz(Z %*% parms[(kx + 1):(kx + kz)] + offsetz))
+        loglik0 <- log(phi + (1 - phi) * dpois(V, lambda = mu, log = FALSE) / (1-exp(-mu)))
+        loglik1 <- log((1 - phi) * dpois(Y, lambda = mu, log = FALSE) / (1-exp(-mu)))
+        loglik <- sum(weights[id0] * loglik0[id0]) + sum(weights[id1] * loglik1[id1])
+        if (!is.finite(loglik) || is.na(loglik))
+            loglik <- -good.num.limit[2]
+        -loglik
+    }
+
+    if (is.null(init))
+      init <- rep(0, kx+kz)
+    opt <- optim(init, 
+        if (truncate) nll_VIP_TR else nll_VIP_ML, 
+        hessian=hessian, method=method, ...)
+    par <- opt$par
+    names(par) <- c(paste0("P_", colnames(X)), paste0("V_", colnames(Z)))
+    vc <- if (hessian)
+        solve(opt$hessian) else matrix(NA, length(par), length(par))
+    dimnames(vc) <- list(names(par), names(par))
+    out <- list(call=match.call(),
+        coefficients=par, loglik=-opt$value, vcov=vc, nobs=n,
+        truncate=truncate)
+    class(out) <- "vip"
+    out
+}
+vcov.vip <- function(object, ...) object$vcov
+logLik.vip <- function (object, ...)
+    structure(object$loglik, df = object$nobs - length(object$coef),
+        nobs = object$nobs, class = "logLik")
+summary.vip <- function (object, ...) {
+    k <- length(object$coefficients)
+    coefs <- coef(object)
+    se <- sqrt(diag(vcov(object)))
+    tstat <- coefs/se
+    pval <- 2 * pnorm(-abs(tstat))
+    coefs <- cbind(coefs, se, tstat, pval)
+    colnames(coefs) <- c("Estimate", "Std. Error", "z value", "Pr(>|z|)")
+    coefs <- coefs[1:k, , drop = FALSE]
+    rownames(coefs) <- names(coef(object))
+    out <- list(call = object$call, coefficients=coefs, loglik = object$loglik,
+        bic=BIC(object), truncate=object$truncate)
+    class(out) <- "summary.vip"
+    return(out)
+}
+print.summary.vip <- function (x, digits, ...)
+{
+    if (missing(digits))
+        digits <- max(3, getOption("digits") - 3)
+    cat("\nCall:", deparse(x$call,
+        width.cutoff = floor(getOption("width") * 0.85)), "", sep = "\n")
+    cat("V-Inflated", if (x$truncate) "(Zero-Truncated)" else "", "Poisson Model\n\n")
+    cat(paste("Coefficients:\n", sep = ""))
+    printCoefmat(x$coefficients, digits = digits, signif.legend = FALSE)
+    if (!any(is.na(array(x$coefficients)))) {
+        if (getOption("show.signif.stars") & any(x$coefficients[,4] < 0.1))
+            cat("---\nSignif. codes: ", "0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1", "\n")
+    }
+    cat("\nLog-likelihood:", formatC(x$loglik, digits = digits),
+        "\nBIC =", formatC(x$bic, digits = digits), "\n")
+    cat("\n")
+    invisible(x)
+}
+confint.vip <-
+function (object, parm, level = 0.95, ...)
+{
+    cf <- coef(object)
+    pnames <- names(cf)
+    if (missing(parm)) {
+        parm <- pnames
+    } else {
+        if (is.numeric(parm))
+            parm <- pnames[parm]
+    }
+    a <- (1 - level)/2
+    a <- c(a, 1 - a)
+    pct <- paste(format(100 * a, trim = TRUE, scientific = FALSE, digits = 3), "%", sep="")
+    ci <- array(NA, dim = c(length(parm), 2), dimnames = list(parm, pct))
+    fac <- qnorm(a)
+    ses <- sqrt(diag(vcov(object, model, type)))
+    ci[] <- cf[parm] + ses[parm] %o% fac
+    ci
+}
+```
+
+## Simple case
+
+```{r}
+set.seed(123)
+n <- 1000
+lam <- 2 # poisson mean, can be a vector of length n
+phi <- 0.4 # V-inflation probability, can be a vector of length n
+V <- 2 # V is the count value, can be 0, 2, etc
+y <- y0 <- rpois(n, lam)
+a <- rbinom(n, 1, phi)
+y[a > 0] <- V
+table(Poisson=y0, Vinflated=y)
+
+mod <- vip(Y=y, V=2)
+summary(mod)
+cbind(True=c(log_lam=log(lam), logit_phi=qlogis(phi)),
+      Est=coef(mod))
+```
+
+## Covariates for the non-V part
+
+```{r}
+set.seed(123)
+n <- 10000
+x <- rnorm(n)
+df <- data.frame(x=x)
+X <- model.matrix(~x, df)
+beta <- c(-0.5,-0.5) # Intercept and beta values for covariate
+lam <- exp(X %*% beta) # poisson mean, can be a vector of length n
+phi <- 0.4 # V-inflation probability, can be a vector of length n
+V <- 2 # V is the count value, can be 0, 2, etc
+y <- y0 <- rpois(n, lam)
+a <- rbinom(n, 1, phi)
+y[a > 0] <- V
+table(Poisson=y0, Vinflated=y)
+mod <- vip(Y=y, X=X, V=2)
+summary(mod)
+cbind(True=c(beta=beta, logit_phi=qlogis(phi)),
+      Est=coef(mod))
+```
+
+## Methods
+
+```{r}
+coef(mod)
+vcov(mod)
+summary(mod)
+confint(mod)
+nobs(mod)
+logLik(mod)
+AIC(mod)
+BIC(mod)
+```
+
+
+# Zero-truncated VIP
+
+We can truncate counts to be larger than 0. We also need $V>0$
+(for $V=0$ case, look into ZIP or conditional Poisson model).
+Conceptually, the V-Inflation follows the
+0-truncation (because we cannot observe 0, real truncated distribution).
+
+The 0-truncated PDF is $P(Y=y \mid Y>0) = \frac{P(Y=y)}{1 - P(Y=0)}$.
+The 0-truncated V-Inflated density is
+$P(Y=y  \mid Y>0,V>0) = \phi I(Y=V) + (1-\phi) \frac{f(y; \lambda)}{1-f(0; \lambda)}$.
+This can be achieved in the `vip` call by the argument `truncate=TRUE`.
+
+Here we use covariates for both the V and non-V part.
+
+```{r}
+set.seed(1)
+n <- 1000
+x <- rnorm(n)
+z <- runif(n, -1, 1)
+df <- data.frame(x=x, z=z)
+X <- model.matrix(~x, df)
+Z <- model.matrix(~z, df)
+beta <- c(-0.5, -0.5)
+alpha <- c(0, 0.5)
+lam <- exp(X %*% beta)
+phi <- plogis(Z %*% alpha)
+V <- 2 # V is the count value, cannot be 0
+y <- y0 <- rpois(n, lam)
+a <- rbinom(n, 1, phi)
+keep <- y0>0
+y <- y[keep] # conditioning (i.e. exclude 0s)
+y0 <- y0[keep]
+X <- X[keep,]
+Z <- Z[keep,]
+y[a[keep] > 0] <- V
+table(Poisson=y0, Vinflated=y)
+
+mod <- vip(Y=y, X=X, Z=Z, V=2, truncate=TRUE)
+summary(mod)
+cbind(True=c(beta=beta, alpha=alpha),
+      Est=coef(mod))
+```
+
+
