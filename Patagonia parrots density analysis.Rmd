@@ -386,18 +386,64 @@ Z <- model.matrix(~season, x)
 set.seed(333)
 VIP.habitat.season <- vip(Y=x$count, X=X, offsetx=log(x$A), V=2, Z=Z, truncate=TRUE, hessian=TRUE, method="SANN")
 
-set.seed(191)
-VIP.habitat <- vip(Y=x$count, X=X, offsetx=log(x$A), V=2, truncate=TRUE, hessian=TRUE, method="SANN")
-
-
-kable(cbind(AIC(VIP.habitat.season,VIP.habitat)[order(AIC(VIP.habitat.season,VIP.habitat)$AIC),],dAIC=round(AIC(VIP.habitat.season,VIP.habitat)[order(AIC(VIP.habitat.season,VIP.habitat)$AIC),2]-AIC(VIP.habitat.season),2)),caption ="\\textit{E. ferrugineous} Group size models AIC table")
-
 
 summary(VIP.habitat.season)
 
 ```
 
-The model with season is more parsimonious (Table 6). Estimated model coefficients indicate that group sizes are larger in urban ($\beta$ = 1.75) and agropastoral ($\beta$ = 0.61) habitats when compared to other natural habitats. Moreover, the probability of there being extra pairs (i.e. the V-inflation probability, $\phi$) is smaller in the non-breeding season ($\beta$ = -3.47). 
+Estimated model coefficients indicate that group sizes are larger in urban ($\beta$ = 1.75) and agropastoral ($\beta$ = 0.61) habitats when compared to other natural habitats. Moreover, the probability of there being extra pairs (i.e. the V-inflation probability, $\phi$) is smaller in the non-breeding season ($\beta$ = -3.47). 
+
+Alternatively, we can estimate coefficient  confidence intervals based on quantiles using bootstrap (with n=250):
+
+```{r, echo=FALSE, warning=F,message=F}
+## Bootstrapping for the model:
+
+dflist<-as.list(rep(NA,250))
+
+bootsample<-function(df){
+  non.breeding<-x[which(x$season=="non-breeding"),]
+  row.names(non.breeding)<-1:nrow(non.breeding)
+  set.seed(123)
+  sample.non.breeding<-non.breeding[sample(nrow(non.breeding),size=385,replace = TRUE),]
+  
+  breeding<-x[which(x$season=="breeding"),]
+  row.names(breeding)<-1:nrow(breeding)
+  set.seed(123)
+  sample.breeding<-breeding[sample(nrow(breeding),size=33,replace = TRUE),]
+  
+  rbind(sample.non.breeding,sample.breeding)
+}
+
+dflist<-lapply(dflist,bootsample)
+
+# fit model to all bootstrap samples:
+VIP.model.fun<-function(df){
+  X <- model.matrix(~Urban+Agropastoral,df)
+  Z <- model.matrix(~season, df)
+  
+  inits<-c(coef(glm(x$count~x$Urban+x$Agropastoral,family=poisson)),0,0)
+  
+  VIP.habitat.season <- vip(Y=df$count, X=X, offsetx=log(df$A), V=2, Z=Z, truncate=TRUE, hessian=F, method="SANN", init=inits)
+}
+
+VIPs<-lapply(dflist,VIP.model.fun)
+
+
+# get means from coefs, and CI based on quantiles
+VIP.boot.coefs<-mapply(FUN=function(x){coef(x)},VIPs)
+
+VIP.boot.coefs[,1]-coef(VIP.habitat.season)
+
+phi<-VIP.boot.coefs-coef(VIP.habitat.season)
+quant<-apply(phi,1,quantile,probs=c(0.05,0.95))
+
+coefCIs<-t(rbind((coef(VIP.habitat.season)),rbind(coef(VIP.habitat.season)-abs(quant[1,]),coef(VIP.habitat.season)+abs(quant[2,]))))
+colnames(coefCIs)<-c("Estimate","5%","95%")
+
+kable(round(coefCIs,3),caption ="Estimated coefficients and 90% CI based on bootstrap quantiles for \\textit{E. ferrugineous} group size models")
+
+```
+
 
 ***
 # Slender-billed parakeet *Enicognathus leptorhynchus*
@@ -616,9 +662,11 @@ row.names(x)<-1:nrow(x)
 X <- model.matrix(~Urban+Agropastoral,x)
 Z <- model.matrix(~season, x)
 
+set.seed(123)
 VIP.habitat.season <- vip(Y=x$count, X=X, offsetx=log(x$A), V=2, Z=Z, truncate=TRUE, hessian=F, method="SANN", init=c(coef(glm(x$count~x$Urban+x$Agropastoral,family=poisson)),0,0))
 
 summary(VIP.habitat.season)
+
 ```
 
 Model-fitting function cannot estimate coefficient standard errors due to sigular Hessian matrix. We can calculate confidence intervals based on quantiles using bootstrap (with n=250):
@@ -631,10 +679,12 @@ dflist<-as.list(rep(NA,250))
 bootsample<-function(df){
   non.breeding<-x[which(x$season=="non-breeding"),]
   row.names(non.breeding)<-1:nrow(non.breeding)
+  set.seed(123)
   sample.non.breeding<-non.breeding[sample(nrow(non.breeding),size=385,replace = TRUE),]
   
   breeding<-x[which(x$season=="breeding"),]
   row.names(breeding)<-1:nrow(breeding)
+  set.seed(123)
   sample.breeding<-breeding[sample(nrow(breeding),size=33,replace = TRUE),]
   
   rbind(sample.non.breeding,sample.breeding)
@@ -658,13 +708,13 @@ VIPs<-lapply(dflist,VIP.model.fun)
 # get means from coefs, and CI based on quantiles
 VIP.boot.coefs<-mapply(FUN=function(x){coef(x)},VIPs)
 
-
 phi<-VIP.boot.coefs-coef(VIP.habitat.season)
 
-coefCIs<-t(rbind((coef(VIP.habitat.season)),apply(phi,1,quantile,probs=c(0.05,0.95))))
-colnames(coefCIs)[1]<-"EStimate"
+quant<-apply(phi,1,quantile,probs=c(0.05,0.95))
+coefCIs<-t(rbind((coef(VIP.habitat.season)),rbind(coef(VIP.habitat.season)-abs(quant[1,]),coef(VIP.habitat.season)+abs(quant[2,]))))
+colnames(coefCIs)<-c("Estimate","5%","95%")
 
-kable(coefCIs,caption ="Estimated coefficients and 90% CI for\\textit{E. leptorhynchus} group size models")
+kable(round(coefCIs,3),caption ="Estimated coefficients and 90% CI based on bootstrap quantiles for\\textit{E. leptorhynchus} group size models")
 
 ```
 

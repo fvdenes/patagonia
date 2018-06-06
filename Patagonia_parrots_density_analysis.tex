@@ -511,22 +511,6 @@ covariate for the count (Poisson) component, and compare models with and
 without season (breeding/non-breeding) as a covariate for the
 V-inflation probability.
 
-\begin{longtable}[]{@{}lrrr@{}}
-\caption{\textit{E. ferrugineous} Group size models AIC
-table}\tabularnewline
-\toprule
-& df & AIC & dAIC\tabularnewline
-\midrule
-\endfirsthead
-\toprule
-& df & AIC & dAIC\tabularnewline
-\midrule
-\endhead
-VIP.habitat.season & 331 & 32075.50 & 0.00\tabularnewline
-VIP.habitat & 332 & 32085.51 & 10.01\tabularnewline
-\bottomrule
-\end{longtable}
-
 \begin{verbatim}
 ## 
 ## Call:
@@ -549,12 +533,33 @@ VIP.habitat & 332 & 32085.51 & 10.01\tabularnewline
 ## BIC = 3.334e+04
 \end{verbatim}
 
-The model with season is more parsimonious (Table 6). Estimated model
-coefficients indicate that group sizes are larger in urban (\(\beta\) =
-1.75) and agropastoral (\(\beta\) = 0.61) habitats when compared to
-other natural habitats. Moreover, the probability of there being extra
-pairs (i.e.~the V-inflation probability, \(\phi\)) is smaller in the
-non-breeding season (\(\beta\) = -3.47).
+Estimated model coefficients indicate that group sizes are larger in
+urban (\(\beta\) = 1.75) and agropastoral (\(\beta\) = 0.61) habitats
+when compared to other natural habitats. Moreover, the probability of
+there being extra pairs (i.e.~the V-inflation probability, \(\phi\)) is
+smaller in the non-breeding season (\(\beta\) = -3.47).
+
+Alternatively, we can estimate coefficient confidence intervals based on
+quantiles using bootstrap (with n=250):
+
+\begin{longtable}[]{@{}lrrr@{}}
+\caption{Estimated coefficients and 90\% CI based on bootstrap quantiles
+for \textit{E. ferrugineous} group size models}\tabularnewline
+\toprule
+& Estimate & 5\% & 95\%\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+& Estimate & 5\% & 95\%\tabularnewline
+\midrule
+\endhead
+P\_(Intercept) & 1.000 & 11.768 & 22.427\tabularnewline
+P\_Urban & 1.754 & 23.047 & 14.438\tabularnewline
+P\_Agropastoral & 0.612 & 18.422 & 16.543\tabularnewline
+V\_(Intercept) & 1.316 & 18.917 & 18.027\tabularnewline
+V\_seasonnon-breeding & -3.474 & 6.256 & 15.643\tabularnewline
+\bottomrule
+\end{longtable}
 
 \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
@@ -562,7 +567,7 @@ non-breeding season (\(\beta\) = -3.47).
 leptorhynchus}}{Slender-billed parakeet Enicognathus leptorhynchus}}\label{slender-billed-parakeet-enicognathus-leptorhynchus}
 
 \begin{figure}[H]
-\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-15-1} \caption{\textit{Enicognathus leptorhynchus} count frequencies}\label{fig:unnamed-chunk-15}
+\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-16-1} \caption{\textit{Enicognathus leptorhynchus} count frequencies}\label{fig:unnamed-chunk-16}
 \end{figure}
 
 \subsection{Estimating effective detection radius
@@ -639,7 +644,7 @@ Agropastoral & 180.7002\tabularnewline
 groups}\label{models-for-number-of-groups-1}
 
 \begin{figure}[H]
-\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-19-1} \caption{\textit{Enicognathus leptorhynchus} group numbers }\label{fig:unnamed-chunk-19}
+\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-20-1} \caption{\textit{Enicognathus leptorhynchus} group numbers }\label{fig:unnamed-chunk-20}
 \end{figure}
 
 First set of models to evaluate the effect of covariates related to
@@ -845,33 +850,46 @@ affected by habitat type, elevation, julian date and year.
 \section{Models for group size}\label{models-for-group-size-1}
 
 \begin{verbatim}
-##      P_(Intercept)     P_Urban P_Agropastoral V_(Intercept)
-## [1,]    -3.4315607 24.02749982      17.308699     5.5023551
-## [2,]    -1.6055318  5.64347167     -17.089005    13.1416174
-## [3,]   -23.5915496 23.21956971      -6.478753    10.3184573
-## [4,]     0.9674519  5.99061566       6.542012    16.3476814
-## [5,]   -32.3644298 -0.01516136     -13.319216     0.8403038
-## [6,]   -15.0687507 18.07756751       4.587351    49.1140564
-##      V_seasonnon-breeding
-## [1,]             11.61975
-## [2,]             25.88478
-## [3,]             30.86020
-## [4,]             15.35033
-## [5,]             43.74769
-## [6,]             26.71279
+## 
+## Call:
+## vip(Y = x$count, X = X, Z = Z, V = 2, offsetx = log(x$A), truncate = TRUE, 
+##     hessian = F, method = "SANN", init = c(coef(glm(x$count ~ x$Urban + 
+##         x$Agropastoral, family = poisson)), 0, 0))
+## 
+## V-Inflated (Zero-Truncated) Poisson Model
+## 
+## Coefficients:
+##                        Estimate Std. Error z value Pr(>|z|)
+## P_(Intercept)          9.348446         NA      NA       NA
+## P_Urban                4.168494         NA      NA       NA
+## P_Agropastoral        -7.553465         NA      NA       NA
+## V_(Intercept)         -0.008148         NA      NA       NA
+## V_seasonnon-breeding -10.208376         NA      NA       NA
+## 
+## Log-likelihood: -5.644e+102 
+## BIC = 1.129e+103
 \end{verbatim}
 
-\begin{longtable}[]{@{}llrr@{}}
+Model-fitting function cannot estimate coefficient standard errors due
+to sigular Hessian matrix. We can calculate confidence intervals based
+on quantiles using bootstrap (with n=250):
+
+\begin{longtable}[]{@{}lrrr@{}}
+\caption{Estimated coefficients and 90\% CI based on bootstrap quantiles
+for\textit{E. leptorhynchus} group size models}\tabularnewline
 \toprule
-& & 5\% & 95\%\tabularnewline
+& Estimate & 5\% & 95\%\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+& Estimate & 5\% & 95\%\tabularnewline
 \midrule
 \endhead
-P\_(Intercept) & 15.5148542 & -34.103307 & 7.173057\tabularnewline
-P\_Urban & -8.6162679 & -11.783613 & 28.778820\tabularnewline
-P\_Agropastoral & -0.0262193 & -20.672452 & 19.980277\tabularnewline
-V\_(Intercept) & -23.5420846 & 4.795528 & 45.179416\tabularnewline
-V\_seasonnon-breeding & -22.8068590 & 1.472501 &
-46.768732\tabularnewline
+P\_(Intercept) & 9.348 & 35.312 & 27.241\tabularnewline
+P\_Urban & 4.168 & 27.080 & 21.238\tabularnewline
+P\_Agropastoral & -7.553 & 6.643 & 22.326\tabularnewline
+V\_(Intercept) & -0.008 & 20.915 & 20.694\tabularnewline
+V\_seasonnon-breeding & -10.208 & 2.320 & 23.541\tabularnewline
 \bottomrule
 \end{longtable}
 
