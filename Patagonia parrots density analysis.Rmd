@@ -1,17 +1,18 @@
 ---
 title: "Patagonia parrots density analysis"
 author: "Francisco Dénes and Peter Sólymos"
-date: "June 2, 2018"
+date: "June 8, 2018"
 output:
   pdf_document:
     fig_caption: yes
     keep_tex: yes
-  word_document: default
+  word_document: 
+    fig_caption: yes
   html_document:
     df_print: paged
 header-includes: \usepackage{float}
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 
@@ -21,9 +22,8 @@ knitr::opts_chunk$set(echo = TRUE,fig.pos = 'H')
 
 # Motivation
 
-We want to model the density of the austral parakeet *Enicognathus ferrugineus* and the slender-billed parakeet *Enicognathus leptorhynchus* from count data obtained with road transect surveys in Patagonia. Because these parrots are gregarious, we want to assess whether group size and size of groups vary across habitats and between breeding (Nov-Dec) and non-breeding seasons (Jan-Oct).
-We use distance sampling methods to account for detectability of parrots.
-
+We want to model the density of the austral parakeet *Enicognathus ferrugineus* and the slender-billed parakeet *Enicognathus leptorhynchus* from count data obtained with road transect surveys in Patagonia. Because these parrots are gregarious, we want to assess whether group size and size of groups vary across habitats (classified as 'urban', 'agropastoral' and 'other' (i.e. various natural forest formations), and between breeding (Nov-Dec) and non-breeding seasons (Jan-Oct).  
+We use distance sampling methods to account for detectability of parrots.  
 
 These animals tend to form smaller or larger groups, but groups of size 2 are also often observed as a result of mating pairs, as shown in Figure 1.
 
@@ -44,7 +44,7 @@ x$pair[which(x$count==2)]<-1
 
 ##Estimating effective detection radius (EDR)
 
-We fit distance sampling models with detection predictor variables, including the average group size, the number of groups that were observed (to account for the possibility that grouping behaviour influences detectability), and also habitat type. We used forward-stepwise model selection, starting with single covariate models and eliminating  covariates that do not improve model parsimony (i.e. result in AIC lower than 2) in relation to the null model.
+We fit distance sampling models with detection predictor variables, including the average group size, the number of groups that were observed (to account for the possibility that grouping behaviour influences detectability), and also habitat type. We used forward-stepwise model selection, starting with single covariate models and eliminating  covariates that do not improve model parsimony (i.e. result in dAIC < 2) in relation to the null model.
 
 ```{r, echo=FALSE, warning=F,message=F}
 ## Estimating effective detection radius (EDR) ####
@@ -114,17 +114,20 @@ kable(cbind(AIC(EDR.null,EDR.avggroupsize,EDR.numbergroups,EDR.habitatype)[order
 ```
 
 The model (`EDR.habitatype`) has the lowest AIC (Table 1), indicating that habitat type affects the effective detection radius (EDR) of *Enicognathus ferrugineus*. Specifically, detection radius is higher in agropastoral than urban and other habitats (Table 2). This means that detectability is higher in agropastoral habitats, and also that the area surveyed in a given sample unit is larger if the habitat therein is agropastoral vs. urban or other, presubably because it is possible to see further in pastures and planted fields than in forest or urban environments.
+
 ```{r, echo=FALSE, warning=F,message=F}
-summary(EDR.habitatype)
-
-kable(data.frame("Habitat"=c("Other","Urban","Agropastoral"), EDR= c( exp(coef(EDR.habitatype))[1],exp(sum(coef(EDR.habitatype)[1:2])),exp(sum(coef(EDR.habitatype)[c(1,3)])))),caption="\\textit{E. ferrugineous} habitat-specific EDR (m)")
-
+kable(summary(EDR.habitatype)$coefficients,digits = 3,caption="\\textit{E. ferrugineous} top-ranked EDR model estimates")
 ```
 
+```{r, echo=FALSE, warning=F,message=F}
+kable(data.frame("Habitat"=c("Other","Urban","Agropastoral"), EDR= c( exp(coef(EDR.habitatype))[1],exp(sum(coef(EDR.habitatype)[1:2])),exp(sum(coef(EDR.habitatype)[c(1,3)])))),caption="\\textit{E. ferrugineous} habitat-specific EDR (m)")
+```
 
-# Models for number of groups 
+## Models for number of groups 
 
-We then model the number of groups as a function of covariates. The model for number of groups is G~i~ ~ Poisson(D~i~A~i~), where D~i~ = covariates and A~i~ = area sampled in site. A~i~ is calculated using the habitat-specific estimated EDR, and is added to the model as an offset. We build a first set of models to evaluate the effect of covariates related to habitat (habitat type and elevation).
+We then model the number of groups as a function of covariates. The model for number of groups is G~i~ ~ Poisson(D~i~A~i~), where D~i~ = covariates and A~i~ = area sampled in site _i_. A~i~ is calculated using the habitat-specific estimated EDR, and is added to the model as an offset. 
+
+
 
 ```{r, echo=FALSE, warning=F,message=F, fig.cap="\\textit{Enicognathus ferrugineus} group numbers ",out.extra=''}
 ## Estimating area surveyed for each site (km^2^), using the EDR for the respective habitat. The area surveyed is used subsequently to estimate densities.
@@ -150,6 +153,9 @@ plot(table(sites$ngroups), ylab="Number of groups")
 
 ```
 
+### Model selection
+
+We build a first set of models to evaluate the effect of covariates related to habitat (habitat type and elevation).
 
 ```{r, echo=FALSE, warning=F,message=F}
 ngroup.hab <- glm(ngroups~habitat, family=poisson, data=sites, offset=log(sites$A))
@@ -165,68 +171,71 @@ ngroup.hab.ele2 <- glm(ngroups~habitat+elevation+I(elevation^2), family=poisson,
 kable(cbind(AIC(ngroup.hab,ngroup.ele,ngroup.hab.ele,ngroup.ele2,ngroup.hab.ele2)[order(AIC(ngroup.hab,ngroup.ele,ngroup.hab.ele,ngroup.ele2,ngroup.hab.ele2)$AIC),],dAIC=round(AIC(ngroup.hab,ngroup.ele,ngroup.hab.ele,ngroup.ele2,ngroup.hab.ele2)[order(AIC(ngroup.hab,ngroup.ele,ngroup.hab.ele,ngroup.ele2,ngroup.hab.ele2)$AIC),2]-AIC(ngroup.hab.ele2),2)),caption ="\\textit{E. ferrugineous} number of group models")
 ```
 
-\hfill\break
-  
-The model with both habitat type and elevation (quadratic effect) has the lowest AIC (Table 3), indicating that both covariates affect the number of groups:
+The model with both habitat type and elevation (quadratic effect) has the lowest AIC (Table 4), indicating that both covariates affect the number of groups:
 
 ```{r, echo=FALSE, warning=F,message=F}
-summary(ngroup.hab.ele)
-anova(ngroup.hab.ele)
+kable(summary(ngroup.hab.ele2)$coefficients,digits = 3,caption="\\textit{E. ferrugineous} 'ngroup.hab.ele2' model estimates")
+
+kable(anova(ngroup.hab.ele2), digits=3,caption="Deviance partitioning of 'ngroup.hab.ele2' model for \\textit{E. ferrugineous}")
+
+
 
 ```
 
 We then proceed by adding within-year temporal covariates (breeding/non-breeding season and julian date) and their interactions with habitat.
 
 ```{r, echo=FALSE, warning=F,message=F}
-ngroup.hab.ele.season <- glm(ngroups~habitat+elevation+I(elevation^2)+season, family=poisson, data=sites, offset=log(sites$A))
+ngroup.hab.season.ele2 <- glm(ngroups~habitat+elevation+I(elevation^2)+season, family=poisson, data=sites, offset=log(sites$A))
 
-ngroup.hab.ele.jdate <- glm(ngroups~habitat+elevation+I(elevation^2)+jdate, family=poisson, data=sites, offset=log(sites$A))
+ngroup.hab.jdate.ele2 <- glm(ngroups~habitat+elevation+I(elevation^2)+jdate, family=poisson, data=sites, offset=log(sites$A))
 
-ngroup.habXseason.ele <- glm(ngroups~elevation+I(elevation^2)+habitat*season, family=poisson, data=sites, offset=log(sites$A))
+ngroup.habXseason.ele2 <- glm(ngroups~elevation+I(elevation^2)+habitat*season, family=poisson, data=sites, offset=log(sites$A))
 
-ngroup.habXjdate.ele <- glm(ngroups~elevation+I(elevation^2)+habitat*jdate, family=poisson, data=sites, offset=log(sites$A))
+ngroup.habXjdate.ele2 <- glm(ngroups~elevation+I(elevation^2)+habitat*jdate, family=poisson, data=sites, offset=log(sites$A))
 
 
-kable(cbind(AIC(ngroup.hab.ele,ngroup.hab.ele.season,ngroup.hab.ele.jdate,ngroup.habXseason.ele,ngroup.habXjdate.ele)[order(AIC(ngroup.hab.ele,ngroup.hab.ele.season,ngroup.hab.ele.jdate,ngroup.habXseason.ele,ngroup.habXjdate.ele)$AIC),],dAIC=round(AIC(ngroup.hab.ele,ngroup.hab.ele.season,ngroup.hab.ele.jdate,ngroup.habXseason.ele,ngroup.habXjdate.ele)[order(AIC(ngroup.hab.ele,ngroup.hab.ele.season,ngroup.hab.ele.jdate,ngroup.habXseason.ele,ngroup.habXjdate.ele)$AIC),2]-AIC(ngroup.habXseason.ele),2)), caption="\\textit{E. ferrugineous} number of group models (within-year temporal predictors) AIC")
+kable(cbind(AIC(ngroup.hab.ele2,ngroup.hab.season.ele2,ngroup.hab.jdate.ele2,ngroup.habXseason.ele2,ngroup.habXjdate.ele2)[order(AIC(ngroup.hab.ele2,ngroup.hab.season.ele2,ngroup.hab.jdate.ele2,ngroup.habXseason.ele2,ngroup.habXjdate.ele2)$AIC),],dAIC=round(AIC(ngroup.hab.ele2,ngroup.hab.season.ele2,ngroup.hab.jdate.ele2,ngroup.habXseason.ele2,ngroup.habXjdate.ele2)[order(AIC(ngroup.hab.ele2,ngroup.hab.season.ele2,ngroup.hab.jdate.ele2,ngroup.habXseason.ele2,ngroup.habXjdate.ele2)$AIC),2]-AIC(ngroup.habXseason.ele2),2)), caption="\\textit{E. ferrugineous} number of group models (within-year temporal predictors) AIC")
 
 ```
 
-Model with season*habitat interaction is equally parcimonious with the model with only the additive effects. Given these are nested models, this indicates the interaction only marginally improves the model fit, so will continue with model with season and no interaction:
+The model with the season*habitat interaction (Table 8) is equally parcimonious with the model with only the additive effects (Table 9). Given these are nested models, this indicates the interaction only marginally improves the model fit, so will continue with model with season and no interaction:
 
-### season*habitat interaction model
 ```{r, echo=FALSE, warning=F,message=F}
-summary(ngroup.habXseason.ele)
+
+kable(summary(ngroup.habXseason.ele2)$coefficients,digits = 3,caption="\\textit{E. ferrugineous} 'ngroup.habXseason.ele2' interaction model estimates")
 ```
 
-### no interaction between season and habitat
+
 ```{r, echo=FALSE, warning=F,message=F}
 
-summary(ngroup.hab.ele.season)
+kable(summary(ngroup.hab.season.ele2)$coefficients,digits = 3,caption="\\textit{E. ferrugineous} 'ngroup.hab.season.ele2' additive model estimates")
+
 ```
 
 Finally, we assess year effects by adding a year covariate (2013-2016).
 ```{r, echo=FALSE, warning=F,message=F}
-ngroup.hab.ele.season.year <- glm(ngroups~habitat+elevation+I(elevation^2)+season+as.factor(year), family=poisson, data=sites, offset=log(sites$A))
+ngroup.hab.season.ele2.year <- glm(ngroups~habitat+elevation+I(elevation^2)+season+as.factor(year), family=poisson, data=sites, offset=log(sites$A))
 
-kable(cbind(AIC(ngroup.hab.ele.season,ngroup.hab.ele.season.year)[order(AIC(ngroup.hab.ele.season,ngroup.hab.ele.season.year)$AIC),],dAIC=round(AIC(ngroup.hab.ele.season,ngroup.hab.ele.season.year)[order(AIC(ngroup.hab.ele.season,ngroup.hab.ele.season.year)$AIC),2]-AIC(ngroup.hab.ele.season.year),2)),caption ="\\textit{E. ferrugineous} number of group models (year predictor) AIC table")
+kable(cbind(AIC(ngroup.hab.season.ele2,ngroup.hab.season.ele2.year)[order(AIC(ngroup.hab.season.ele2,ngroup.hab.season.ele2.year)$AIC),],dAIC=round(AIC(ngroup.hab.season.ele2,ngroup.hab.season.ele2.year)[order(AIC(ngroup.hab.season.ele2,ngroup.hab.season.ele2.year)$AIC),2]-AIC(ngroup.hab.season.ele2.year),2)),caption ="\\textit{E. ferrugineous} number of group models (year predictor) AIC table")
 ```
 
 The model with lowest AIC indicates that the number of groups is affected by habitat ype, elevation, season (breeding/non breeding) and year.
 
 ```{r, echo=FALSE, warning=F,message=F}
-summary(ngroup.hab.ele.season.year)
-anova(ngroup.hab.ele.season.year)
+kable(summary(ngroup.hab.season.ele2.year)$coefficients,digits = 3,caption="\\textit{E. ferrugineous} top-ranked (ngroup.hab.season.ele2.year) model estimates")
+kable(anova(ngroup.hab.season.ele2.year), digits=3,caption="Deviance partitioning of top-ranked 'ngroup.hab.season.ele2.year' model for \\textit{E. ferrugineous}")
+
 ```
 
-# Models for group size 
+## Models for group size 
 The count distribution is characterized with a spike at 2 (Figure 1), and by the
 absence of 0s due to group size being conditional on having >0 birds to consider
 it a group.
 
-We start developing a general V-Inflated Poisson (VIP) model ("V" stands for variable, in refence to the "Z" representing 0 in a zero-inflated model, or ZIP), then we add the >0 condition.
+We start developing a general V-Inflated Poisson (VIP) model ("V" stands for "variable"", in refence to the "Z" representing 0 in a zero-inflated Poisson model, or ZIP), then we add the >0 condition.
 
 
-## Maximum likelihood
+### Maximum likelihood
 
 Let $Y$ be a random variable, and $y$ are observations, $V$ is the count value
 that has some extra probability mass ($V=0$ is the ZIP model), $f(y; \lambda)$
@@ -386,19 +395,19 @@ Z <- model.matrix(~season, x)
 set.seed(333)
 VIP.habitat.season <- vip(Y=x$count, X=X, offsetx=log(x$A), V=2, Z=Z, truncate=TRUE, hessian=TRUE, method="SANN")
 
+kable(summary(VIP.habitat.season)$coefficients,digits = 3,caption="\\textit{E. ferrugineous} group size model estimates")
 
-summary(VIP.habitat.season)
-
+nboot<-30
 ```
 
-Estimated model coefficients indicate that group sizes are larger in urban ($\beta$ = 1.75) and agropastoral ($\beta$ = 0.61) habitats when compared to other natural habitats. Moreover, the probability of there being extra pairs (i.e. the V-inflation probability, $\phi$) is smaller in the non-breeding season ($\beta$ = -3.47). 
+Estimated model coefficients (Table 13) indicate that group sizes are larger in urban ($\beta$ = `r round(coef(VIP.habitat.season)[2],3)`) and agropastoral ($\beta$ = `r round(coef(VIP.habitat.season)[2],3)`) habitats when compared to other natural habitats. Moreover, the probability of there being extra pairs (i.e. the V-inflation probability, $\phi$) is smaller in the non-breeding season ($\beta$ = `r round(coef(VIP.habitat.season)[2],3)`). 
 
-Alternatively, we can estimate coefficient  confidence intervals based on quantiles using bootstrap (with n=250):
+Alternatively, we can estimate confidence intervals based on quantiles using bootstrap samples (with n=`r nboot`) for the estimated coefficients (Table 14).
 
 ```{r, echo=FALSE, warning=F,message=F}
 ## Bootstrapping for the model:
 
-dflist<-as.list(rep(NA,250))
+dflist<-as.list(rep(NA,nboot))
 
 bootsample<-function(df){
   non.breeding<-x[which(x$season=="non-breeding"),]
@@ -432,15 +441,13 @@ VIPs<-lapply(dflist,VIP.model.fun)
 # get means from coefs, and CI based on quantiles
 VIP.boot.coefs<-mapply(FUN=function(x){coef(x)},VIPs)
 
-VIP.boot.coefs[,1]-coef(VIP.habitat.season)
-
 phi<-VIP.boot.coefs-coef(VIP.habitat.season)
 quant<-apply(phi,1,quantile,probs=c(0.05,0.95))
 
 coefCIs<-t(rbind((coef(VIP.habitat.season)),rbind(coef(VIP.habitat.season)-abs(quant[1,]),coef(VIP.habitat.season)+abs(quant[2,]))))
 colnames(coefCIs)<-c("Estimate","5%","95%")
 
-kable(round(coefCIs,3),caption ="Estimated coefficients and 90% CI based on bootstrap quantiles for \\textit{E. ferrugineous} group size models")
+kable(round(coefCIs,3),caption =paste0("Estimated coefficients and 90% CI based on bootstrap sample (n= ",nboot ,") quantiles for \\textit{E. ferrugineous} group size models"))
 
 ```
 
@@ -533,12 +540,12 @@ EDR.habitat.avggroupsize.numbergroups <- cmulti(Y | D ~ Urban + Agropastoral +ga
 #summary(EDR.habitat.avggroupsize.numbergroups)
 
 
-kable(cbind(AIC(EDR.null,EDR.avggroupsize,EDR.numbergroups,EDR.habitatype,EDR.avggroupsize.habitat,EDR.avggroupsize.numbergroups,EDR.habitat.numbergroups,EDR.habitat.avggroupsize.numbergroups)[order(AIC(EDR.null,EDR.avggroupsize,EDR.numbergroups,EDR.habitatype,EDR.avggroupsize.habitat,EDR.avggroupsize.numbergroups,EDR.habitat.numbergroups,EDR.habitat.avggroupsize.numbergroups)$AIC),],dAIC=round(AIC(EDR.null,EDR.avggroupsize,EDR.numbergroups,EDR.habitatype,EDR.avggroupsize.habitat,EDR.avggroupsize.numbergroups,EDR.habitat.numbergroups,EDR.habitat.avggroupsize.numbergroups)[order(AIC(EDR.null,EDR.avggroupsize,EDR.numbergroups,EDR.habitatype,EDR.avggroupsize.habitat,EDR.avggroupsize.numbergroups,EDR.habitat.numbergroups,EDR.habitat.avggroupsize.numbergroups)$AIC),2]-AIC(EDR.avggroupsize.habitat),2)),caption ="\\textit{E. ferrugineous} EDR models AIC")
+kable(cbind(AIC(EDR.null,EDR.avggroupsize,EDR.numbergroups,EDR.habitatype,EDR.avggroupsize.habitat,EDR.avggroupsize.numbergroups,EDR.habitat.numbergroups,EDR.habitat.avggroupsize.numbergroups)[order(AIC(EDR.null,EDR.avggroupsize,EDR.numbergroups,EDR.habitatype,EDR.avggroupsize.habitat,EDR.avggroupsize.numbergroups,EDR.habitat.numbergroups,EDR.habitat.avggroupsize.numbergroups)$AIC),],dAIC=round(AIC(EDR.null,EDR.avggroupsize,EDR.numbergroups,EDR.habitatype,EDR.avggroupsize.habitat,EDR.avggroupsize.numbergroups,EDR.habitat.numbergroups,EDR.habitat.avggroupsize.numbergroups)[order(AIC(EDR.null,EDR.avggroupsize,EDR.numbergroups,EDR.habitatype,EDR.avggroupsize.habitat,EDR.avggroupsize.numbergroups,EDR.habitat.numbergroups,EDR.habitat.avggroupsize.numbergroups)$AIC),2]-AIC(EDR.avggroupsize.habitat),2)),caption ="\\textit{E. leptorhynchus} EDR models AIC")
 ```
 
-The model (`EDR.avggroupsize.habitat`) has the lowest AIC (Table 7), indicating that habitat type and average group size affect the effective detection radius (EDR) of *Enicognathus leptorhynchus*. The mean EDR for each habitat, predicted using model coefficients and the habitat-specific means of average group size, is shown in Table 8.
+The model (`EDR.avggroupsize.habitat`) has the lowest AIC (Table 7), indicating that habitat type and average group size affect the effective detection radius (EDR) of *Enicognathus leptorhynchus*. The mean EDR for each habitat, predicted using model coefficients and the habitat-specific means of average group size, is shown in Table 16.
 ```{r, echo=FALSE, warning=F,message=F}
-summary(EDR.avggroupsize.habitat)
+kable(summary(EDR.avggroupsize.habitat)$coefficients,digits = 3,caption="\\textit{E. leptorhynchus} top-ranked EDR model estimates")
 
 gsizemeansbyhab<-aggregate(X$gavg,by=list(X$Urban,X$Agropastoral),mean)
 
@@ -552,7 +559,7 @@ kable(data.frame("Habitat"=c("Other","Urban","Agropastoral"), EDR= c(otherEDR,ur
 ```
 
 
-# Models for number of groups 
+## Models for number of groups 
 
 ```{r, echo=FALSE, warning=F,message=F, fig.cap="\\textit{Enicognathus leptorhynchus} group numbers ",out.extra=''}
 ## Estimating area surveyed for each site (km^2^), using the EDR for the respective habitat. The area surveyed is used subsequently to estimate densities.
@@ -585,7 +592,9 @@ plot(table(sites$ngroups), ylab="Number of groups")
 
 ```
 
-First set of models to evaluate the effect of covariates related to habitat (habitat type and elevation):
+### Model selection  
+
+First set of models to evaluate the effect of habitat type and elevation covariates (Table 18):
 
 ```{r, echo=FALSE, warning=F,message=F}
 ngroup.hab <- glm(ngroups~habitat, family=poisson, data=sites, offset=log(sites$A))
@@ -602,11 +611,12 @@ ngroup.hab.ele2 <- glm(ngroups~habitat+elevation+I(elevation^2), family=poisson,
 kable(cbind(AIC(ngroup.hab,ngroup.ele,ngroup.hab.ele,ngroup.ele2,ngroup.hab.ele2)[order(AIC(ngroup.hab,ngroup.ele,ngroup.hab.ele,ngroup.ele2,ngroup.hab.ele2)$AIC),],dAIC=round(AIC(ngroup.hab,ngroup.ele,ngroup.hab.ele,ngroup.ele2,ngroup.hab.ele2)[order(AIC(ngroup.hab,ngroup.ele,ngroup.hab.ele,ngroup.ele2,ngroup.hab.ele2)$AIC),2]-AIC(ngroup.hab.ele),2)),caption ="\\textit{E. leptorhynchus} number of group models")
 ```
 
-The models with and habitat type and elevation (linear effect)habitat type and elevation (quadratic effect) are equally parsimonious (Table 9). Given their nestedness, we drop the quadratic elevation effect and continue with the model with habitat and linear elevation effects.
+The models 'ngroup.hab.ele' (linear elevation effect) and 'ngroup.hab.ele' (quadratic effect) are equally parsimonious (Table 18). Given their nestedness, we drop the quadratic term and continue with the model with habitat and linear elevation effects (Tables 19-20).
 
 ```{r, echo=FALSE, warning=F,message=F}
-summary(ngroup.hab.ele)
-anova(ngroup.hab.ele)
+kable(summary(ngroup.hab.ele)$coefficients,digits = 3,caption="\\textit{E. leptorhynchus} 'ngroup.hab.ele' model estimates")
+
+kable(anova(ngroup.hab.ele), digits=3,caption="Deviance partitioning of 'ngroup.hab.ele' model for \\textit{E. leptorhynchus}")
 
 ```
 
@@ -626,11 +636,13 @@ ngroup.habXjdate.ele <- glm(ngroups~elevation+habitat*jdate, family=poisson, dat
 kable(cbind(AIC(ngroup.hab.ele,ngroup.hab.ele.season,ngroup.hab.ele.jdate,ngroup.habXseason.ele,ngroup.habXjdate.ele)[order(AIC(ngroup.hab.ele,ngroup.hab.ele.season,ngroup.hab.ele.jdate,ngroup.habXseason.ele,ngroup.habXjdate.ele)$AIC),],dAIC=round(AIC(ngroup.hab.ele,ngroup.hab.ele.season,ngroup.hab.ele.jdate,ngroup.habXseason.ele,ngroup.habXjdate.ele)[order(AIC(ngroup.hab.ele,ngroup.hab.ele.season,ngroup.hab.ele.jdate,ngroup.habXseason.ele,ngroup.habXjdate.ele)$AIC),2]-AIC(ngroup.habXjdate.ele),2)), caption="\\textit{E. leptorhynchus} number of group models (within-year temporal predictors) AIC")
 ```
 
-The model with jdate*habitat interaction has the lowest AIC (Table 9).
+The model 'ngroup.habXjdate.ele' has the lowest AIC (Table 21).
 
-### season*habitat interaction model
+
 ```{r, echo=FALSE, warning=F,message=F}
-summary(ngroup.habXjdate.ele)
+
+kable(summary(ngroup.habXjdate.ele)$coefficients,digits = 3,caption="\\textit{E. leptorhynchus} 'ngroup.habXjdate.ele' model estimates")
+
 ```
 
 Assess year effects by adding a year covariate (2013-2016).
@@ -640,15 +652,19 @@ ngroup.habXjdate.ele.year <- glm(ngroups~habitat+elevation+season+as.factor(year
 kable(cbind(AIC(ngroup.habXjdate.ele,ngroup.habXjdate.ele.year)[order(AIC(ngroup.habXjdate.ele,ngroup.habXjdate.ele.year)$AIC),],dAIC=round(AIC(ngroup.habXjdate.ele,ngroup.habXjdate.ele.year)[order(AIC(ngroup.habXjdate.ele,ngroup.habXjdate.ele.year)$AIC),2]-AIC(ngroup.habXjdate.ele.year),2)),caption ="\\textit{E. leptorhynchus} number of group models (year predictor) AIC table")
 ```
 
-The model with lowest AIC indicates that the number of groups is affected by habitat type, elevation, julian date and year.
+The model with lowest AIC indicates that the number of groups is affected by habitat type, elevation, julian date and year (Tables 23-24).
 
 ```{r, echo=FALSE, warning=F,message=F}
-summary(ngroup.habXjdate.ele.year)
-anova(ngroup.habXjdate.ele.year)
+
+
+kable(summary(ngroup.habXjdate.ele.year)$coefficients,digits = 3,caption="\\textit{E. leptorhynchus} 'ngroup.habXjdate.ele.year' model estimates")
+
+kable(anova(ngroup.habXjdate.ele.year), digits=3,caption="Deviance partitioning of 'ngroup.habXjdate.ele.year' model for \\textit{E. leptorhynchus}")
+
 ```
 
 
-# Models for group size 
+## Models for group size 
 
 ```{r, echo=FALSE, warning=F,message=F}
 x$A <- NA
@@ -665,16 +681,16 @@ Z <- model.matrix(~season, x)
 set.seed(123)
 VIP.habitat.season <- vip(Y=x$count, X=X, offsetx=log(x$A), V=2, Z=Z, truncate=TRUE, hessian=F, method="SANN", init=c(coef(glm(x$count~x$Urban+x$Agropastoral,family=poisson)),0,0))
 
-summary(VIP.habitat.season)
 
+kable(summary(VIP.habitat.season)$coefficients,digits = 3,caption="\\textit{E. leptorhynchus} group size model estimates")
 ```
 
-Model-fitting function cannot estimate coefficient standard errors due to sigular Hessian matrix. We can calculate confidence intervals based on quantiles using bootstrap (with n=250):
+Model-fitting function cannot estimate coefficient standard errors due to sigular Hessian matrix (Table 25). We can calculate confidence intervals based on quantiles using bootstrap (with n=`r nboot`):
 
 ```{r, echo=FALSE, warning=F,message=F}
 ## Bootstrapping for the model:
 
-dflist<-as.list(rep(NA,250))
+dflist<-as.list(rep(NA,nboot))
 
 bootsample<-function(df){
   non.breeding<-x[which(x$season=="non-breeding"),]
@@ -719,7 +735,7 @@ kable(round(coefCIs,3),caption ="Estimated coefficients and 90% CI based on boot
 ```
 
 ***
-# VIP model - R functions and simulations
+# VIP model - R functions and simulations (author: Peter Sólymos)
 
 ```{r}
 vip <-
@@ -906,7 +922,7 @@ BIC(mod)
 ```
 
 
-# Zero-truncated VIP
+## Zero-truncated VIP
 
 We can truncate counts to be larger than 0. We also need $V>0$
 (for $V=0$ case, look into ZIP or conditional Poisson model).

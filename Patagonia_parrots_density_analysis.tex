@@ -122,7 +122,7 @@
   \postauthor{\par}
   \predate{\centering\large\emph}
   \postdate{\par}
-  \date{June 2, 2018}
+  \date{June 8, 2018}
 
 \usepackage{float}
 
@@ -135,9 +135,12 @@ We want to model the density of the austral parakeet \emph{Enicognathus
 ferrugineus} and the slender-billed parakeet \emph{Enicognathus
 leptorhynchus} from count data obtained with road transect surveys in
 Patagonia. Because these parrots are gregarious, we want to assess
-whether group size and size of groups vary across habitats and between
-breeding (Nov-Dec) and non-breeding seasons (Jan-Oct). We use distance
-sampling methods to account for detectability of parrots.
+whether group size and size of groups vary across habitats (classified
+as `urban', `agropastoral' and `other' (i.e.~various natural forest
+formations), and between breeding (Nov-Dec) and non-breeding seasons
+(Jan-Oct).\\
+We use distance sampling methods to account for detectability of
+parrots.
 
 These animals tend to form smaller or larger groups, but groups of size
 2 are also often observed as a result of mating pairs, as shown in
@@ -159,7 +162,7 @@ observed (to account for the possibility that grouping behaviour
 influences detectability), and also habitat type. We used
 forward-stepwise model selection, starting with single covariate models
 and eliminating covariates that do not improve model parsimony
-(i.e.~result in AIC lower than 2) in relation to the null model.
+(i.e.~result in dAIC \textless{} 2) in relation to the null model.
 
 \begin{longtable}[]{@{}lrrr@{}}
 \caption{\textit{E. ferrugineous} EDR models AIC}\tabularnewline
@@ -188,25 +191,24 @@ therein is agropastoral vs.~urban or other, presubably because it is
 possible to see further in pastures and planted fields than in forest or
 urban environments.
 
-\begin{verbatim}
-## 
-## Call:
-## cmulti(formula = Y | D ~ Urban + Agropastoral, data = X, type = "dis")
-## 
-## Distance Sampling (half-normal, circular area)
-## Conditional Maximum Likelihood estimates
-## 
-## Coefficients:
-##                      Estimate Std. Error z value Pr(>|z|)    
-## log.tau_(Intercept)   4.58872    0.03844 119.365   <2e-16 ***
-## log.tau_Urban         0.05744    0.05814   0.988   0.3232    
-## log.tau_Agropastoral  0.26269    0.10278   2.556   0.0106 *  
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
-## 
-## Log-likelihood: -714.3 
-## BIC =  1444
-\end{verbatim}
+\begin{longtable}[]{@{}lrrrr@{}}
+\caption{\textit{E. ferrugineous} top-ranked EDR model
+estimates}\tabularnewline
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endhead
+log.tau\_(Intercept) & 4.589 & 0.038 & 119.365 & 0.000\tabularnewline
+log.tau\_Urban & 0.057 & 0.058 & 0.988 & 0.323\tabularnewline
+log.tau\_Agropastoral & 0.263 & 0.103 & 2.556 & 0.011\tabularnewline
+\bottomrule
+\end{longtable}
 
 \begin{longtable}[]{@{}lr@{}}
 \caption{\textit{E. ferrugineous} habitat-specific EDR
@@ -225,20 +227,24 @@ Agropastoral & 127.92056\tabularnewline
 \bottomrule
 \end{longtable}
 
-\section{Models for number of groups}\label{models-for-number-of-groups}
+\subsection{Models for number of
+groups}\label{models-for-number-of-groups}
 
 We then model the number of groups as a function of covariates. The
 model for number of groups is G\textsubscript{i} \textasciitilde{}
 Poisson(D\textsubscript{i}A\textsubscript{i}), where D\textsubscript{i}
-= covariates and A\textsubscript{i} = area sampled in site.
+= covariates and A\textsubscript{i} = area sampled in site \emph{i}.
 A\textsubscript{i} is calculated using the habitat-specific estimated
-EDR, and is added to the model as an offset. We build a first set of
-models to evaluate the effect of covariates related to habitat (habitat
-type and elevation).
+EDR, and is added to the model as an offset.
 
 \begin{figure}[H]
-\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-5-1} \caption{\textit{Enicognathus ferrugineus} group numbers }\label{fig:unnamed-chunk-5}
+\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-6-1} \caption{\textit{Enicognathus ferrugineus} group numbers }\label{fig:unnamed-chunk-6}
 \end{figure}
+
+\subsubsection{Model selection}\label{model-selection}
+
+We build a first set of models to evaluate the effect of covariates
+related to habitat (habitat type and elevation).
 
 \begin{longtable}[]{@{}lrrr@{}}
 \caption{\textit{E. ferrugineous} number of group models}\tabularnewline
@@ -258,55 +264,48 @@ ngroup.ele & 2 & 2323.806 & 240.84\tabularnewline
 \bottomrule
 \end{longtable}
 
-\hfill\break
-
 The model with both habitat type and elevation (quadratic effect) has
-the lowest AIC (Table 3), indicating that both covariates affect the
+the lowest AIC (Table 4), indicating that both covariates affect the
 number of groups:
 
-\begin{verbatim}
-## 
-## Call:
-## glm(formula = ngroups ~ habitat + elevation, family = poisson, 
-##     data = sites, offset = log(sites$A))
-## 
-## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -2.9552  -0.3696  -0.2192  -0.1266   7.6615  
-## 
-## Coefficients:
-##                Estimate Std. Error z value Pr(>|z|)    
-## (Intercept)  -3.8742985  0.2033144 -19.056  < 2e-16 ***
-## habitatOther  1.7435771  0.1978580   8.812  < 2e-16 ***
-## habitatUrban  2.4225361  0.2020368  11.991  < 2e-16 ***
-## elevation    -0.0007506  0.0001637  -4.586 4.51e-06 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-## (Dispersion parameter for poisson family taken to be 1)
-## 
-##     Null deviance: 1865.3  on 2900  degrees of freedom
-## Residual deviance: 1636.1  on 2897  degrees of freedom
-## AIC: 2114.4
-## 
-## Number of Fisher Scoring iterations: 7
-\end{verbatim}
+\begin{longtable}[]{@{}lrrrr@{}}
+\caption{\textit{E. ferrugineous} `ngroup.hab.ele2' model
+estimates}\tabularnewline
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endhead
+(Intercept) & -3.108 & 0.233 & -13.356 & 0\tabularnewline
+habitatOther & 1.507 & 0.202 & 7.455 & 0\tabularnewline
+habitatUrban & 2.390 & 0.202 & 11.823 & 0\tabularnewline
+elevation & -0.004 & 0.001 & -7.032 & 0\tabularnewline
+I(elevation\^{}2) & 0.000 & 0.000 & 5.947 & 0\tabularnewline
+\bottomrule
+\end{longtable}
 
-\begin{verbatim}
-## Analysis of Deviance Table
-## 
-## Model: poisson, link: log
-## 
-## Response: ngroups
-## 
-## Terms added sequentially (first to last)
-## 
-## 
-##           Df Deviance Resid. Df Resid. Dev
-## NULL                       2900     1865.3
-## habitat    2  207.965      2898     1657.4
-## elevation  1   21.279      2897     1636.1
-\end{verbatim}
+\begin{longtable}[]{@{}lrrrr@{}}
+\caption{Deviance partitioning of `ngroup.hab.ele2' model for
+\textit{E. ferrugineous}}\tabularnewline
+\toprule
+& Df & Deviance & Resid. Df & Resid. Dev\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+& Df & Deviance & Resid. Df & Resid. Dev\tabularnewline
+\midrule
+\endhead
+NULL & NA & NA & 2900 & 1865.338\tabularnewline
+habitat & 2 & 207.965 & 2898 & 1657.373\tabularnewline
+elevation & 1 & 21.279 & 2897 & 1636.094\tabularnewline
+I(elevation\^{}2) & 1 & 33.475 & 2896 & 1602.619\tabularnewline
+\bottomrule
+\end{longtable}
 
 We then proceed by adding within-year temporal covariates
 (breeding/non-breeding season and julian date) and their interactions
@@ -323,86 +322,67 @@ temporal predictors) AIC}\tabularnewline
 & df & AIC & dAIC\tabularnewline
 \midrule
 \endhead
-ngroup.habXseason.ele & 8 & 2065.594 & 0.00\tabularnewline
-ngroup.hab.ele.season & 6 & 2067.555 & 1.96\tabularnewline
-ngroup.habXjdate.ele & 8 & 2081.546 & 15.95\tabularnewline
-ngroup.hab.ele.jdate & 6 & 2084.491 & 18.90\tabularnewline
-ngroup.hab.ele & 4 & 2114.437 & 48.84\tabularnewline
+ngroup.habXseason.ele2 & 8 & 2065.594 & 0.00\tabularnewline
+ngroup.hab.season.ele2 & 6 & 2067.555 & 1.96\tabularnewline
+ngroup.habXjdate.ele2 & 8 & 2081.546 & 15.95\tabularnewline
+ngroup.hab.ele2 & 5 & 2082.963 & 17.37\tabularnewline
+ngroup.hab.jdate.ele2 & 6 & 2084.491 & 18.90\tabularnewline
 \bottomrule
 \end{longtable}
 
-Model with season*habitat interaction is equally parcimonious with the
-model with only the additive effects. Given these are nested models,
-this indicates the interaction only marginally improves the model fit,
-so will continue with model with season and no interaction:
+The model with the season*habitat interaction (Table 8) is equally
+parcimonious with the model with only the additive effects (Table 9).
+Given these are nested models, this indicates the interaction only
+marginally improves the model fit, so will continue with model with
+season and no interaction:
 
-\subsubsection{season*habitat interaction
-model}\label{seasonhabitat-interaction-model}
+\begin{longtable}[]{@{}lrrrr@{}}
+\caption{\textit{E. ferrugineous} `ngroup.habXseason.ele2' interaction
+model estimates}\tabularnewline
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endhead
+(Intercept) & -18.187 & 558.012 & -0.033 & 0.974\tabularnewline
+elevation & -0.004 & 0.001 & -6.547 & 0.000\tabularnewline
+I(elevation\^{}2) & 0.000 & 0.000 & 5.500 & 0.000\tabularnewline
+habitatOther & 15.797 & 558.012 & 0.028 & 0.977\tabularnewline
+habitatUrban & 2.008 & 908.375 & 0.002 & 0.998\tabularnewline
+seasonnon-breeding & 15.186 & 558.012 & 0.027 & 0.978\tabularnewline
+habitatOther:seasonnon-breeding & -14.357 & 558.012 & -0.026 &
+0.979\tabularnewline
+habitatUrban:seasonnon-breeding & 0.266 & 908.375 & 0.000 &
+1.000\tabularnewline
+\bottomrule
+\end{longtable}
 
-\begin{verbatim}
-## 
-## Call:
-## glm(formula = ngroups ~ elevation + I(elevation^2) + habitat * 
-##     season, family = poisson, data = sites, offset = log(sites$A))
-## 
-## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -3.1791  -0.3703  -0.2113  -0.1192   7.9062  
-## 
-## Coefficients:
-##                                   Estimate Std. Error z value Pr(>|z|)    
-## (Intercept)                     -1.819e+01  5.580e+02  -0.033    0.974    
-## elevation                       -3.900e-03  5.957e-04  -6.547 5.88e-11 ***
-## I(elevation^2)                   2.637e-06  4.795e-07   5.500 3.80e-08 ***
-## habitatOther                     1.580e+01  5.580e+02   0.028    0.977    
-## habitatUrban                     2.008e+00  9.084e+02   0.002    0.998    
-## seasonnon-breeding               1.519e+01  5.580e+02   0.027    0.978    
-## habitatOther:seasonnon-breeding -1.436e+01  5.580e+02  -0.026    0.979    
-## habitatUrban:seasonnon-breeding  2.663e-01  9.084e+02   0.000    1.000    
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-## (Dispersion parameter for poisson family taken to be 1)
-## 
-##     Null deviance: 1865.3  on 2900  degrees of freedom
-## Residual deviance: 1579.2  on 2893  degrees of freedom
-## AIC: 2065.6
-## 
-## Number of Fisher Scoring iterations: 16
-\end{verbatim}
-
-\subsubsection{no interaction between season and
-habitat}\label{no-interaction-between-season-and-habitat}
-
-\begin{verbatim}
-## 
-## Call:
-## glm(formula = ngroups ~ habitat + elevation + I(elevation^2) + 
-##     season, family = poisson, data = sites, offset = log(sites$A))
-## 
-## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -3.1472  -0.3692  -0.2153  -0.1244   7.8798  
-## 
-## Coefficients:
-##                      Estimate Std. Error z value Pr(>|z|)    
-## (Intercept)        -4.250e+00  4.119e-01 -10.318  < 2e-16 ***
-## habitatOther        1.510e+00  2.037e-01   7.411 1.25e-13 ***
-## habitatUrban        2.314e+00  2.026e-01  11.424  < 2e-16 ***
-## elevation          -3.800e-03  5.929e-04  -6.408 1.47e-10 ***
-## I(elevation^2)      2.565e-06  4.781e-07   5.365 8.11e-08 ***
-## seasonnon-breeding  1.175e+00  3.404e-01   3.451 0.000558 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-## (Dispersion parameter for poisson family taken to be 1)
-## 
-##     Null deviance: 1865.3  on 2900  degrees of freedom
-## Residual deviance: 1585.2  on 2895  degrees of freedom
-## AIC: 2067.6
-## 
-## Number of Fisher Scoring iterations: 7
-\end{verbatim}
+\begin{longtable}[]{@{}lrrrr@{}}
+\caption{\textit{E. ferrugineous} `ngroup.hab.season.ele2' additive
+model estimates}\tabularnewline
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endhead
+(Intercept) & -4.250 & 0.412 & -10.318 & 0.000\tabularnewline
+habitatOther & 1.510 & 0.204 & 7.411 & 0.000\tabularnewline
+habitatUrban & 2.314 & 0.203 & 11.424 & 0.000\tabularnewline
+elevation & -0.004 & 0.001 & -6.408 & 0.000\tabularnewline
+I(elevation\^{}2) & 0.000 & 0.000 & 5.365 & 0.000\tabularnewline
+seasonnon-breeding & 1.175 & 0.340 & 3.451 & 0.001\tabularnewline
+\bottomrule
+\end{longtable}
 
 Finally, we assess year effects by adding a year covariate (2013-2016).
 
@@ -417,8 +397,8 @@ predictor) AIC table}\tabularnewline
 & df & AIC & dAIC\tabularnewline
 \midrule
 \endhead
-ngroup.hab.ele.season.year & 9 & 2022.265 & 0.00\tabularnewline
-ngroup.hab.ele.season & 6 & 2067.555 & 45.29\tabularnewline
+ngroup.hab.season.ele2.year & 9 & 2022.265 & 0.00\tabularnewline
+ngroup.hab.season.ele2 & 6 & 2067.555 & 45.29\tabularnewline
 \bottomrule
 \end{longtable}
 
@@ -426,70 +406,64 @@ The model with lowest AIC indicates that the number of groups is
 affected by habitat ype, elevation, season (breeding/non breeding) and
 year.
 
-\begin{verbatim}
-## 
-## Call:
-## glm(formula = ngroups ~ habitat + elevation + I(elevation^2) + 
-##     season + as.factor(year), family = poisson, data = sites, 
-##     offset = log(sites$A))
-## 
-## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -2.6688  -0.4066  -0.2324  -0.1305   7.4851  
-## 
-## Coefficients:
-##                       Estimate Std. Error z value Pr(>|z|)    
-## (Intercept)         -4.716e+00  4.170e-01 -11.311  < 2e-16 ***
-## habitatOther         1.739e+00  2.062e-01   8.434  < 2e-16 ***
-## habitatUrban         2.460e+00  2.037e-01  12.075  < 2e-16 ***
-## elevation           -3.430e-03  6.005e-04  -5.712 1.12e-08 ***
-## I(elevation^2)       2.230e-06  4.860e-07   4.588 4.47e-06 ***
-## seasonnon-breeding   1.022e+00  3.479e-01   2.939  0.00329 ** 
-## as.factor(year)2014  9.236e-02  1.683e-01   0.549  0.58307    
-## as.factor(year)2015  9.180e-01  1.614e-01   5.688 1.28e-08 ***
-## as.factor(year)2016  6.115e-01  2.053e-01   2.979  0.00289 ** 
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-## (Dispersion parameter for poisson family taken to be 1)
-## 
-##     Null deviance: 1865.3  on 2900  degrees of freedom
-## Residual deviance: 1533.9  on 2892  degrees of freedom
-## AIC: 2022.3
-## 
-## Number of Fisher Scoring iterations: 6
-\end{verbatim}
+\begin{longtable}[]{@{}lrrrr@{}}
+\caption{\textit{E. ferrugineous} top-ranked
+(ngroup.hab.season.ele2.year) model estimates}\tabularnewline
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endhead
+(Intercept) & -4.716 & 0.417 & -11.311 & 0.000\tabularnewline
+habitatOther & 1.739 & 0.206 & 8.434 & 0.000\tabularnewline
+habitatUrban & 2.460 & 0.204 & 12.075 & 0.000\tabularnewline
+elevation & -0.003 & 0.001 & -5.712 & 0.000\tabularnewline
+I(elevation\^{}2) & 0.000 & 0.000 & 4.588 & 0.000\tabularnewline
+seasonnon-breeding & 1.022 & 0.348 & 2.939 & 0.003\tabularnewline
+as.factor(year)2014 & 0.092 & 0.168 & 0.549 & 0.583\tabularnewline
+as.factor(year)2015 & 0.918 & 0.161 & 5.688 & 0.000\tabularnewline
+as.factor(year)2016 & 0.612 & 0.205 & 2.979 & 0.003\tabularnewline
+\bottomrule
+\end{longtable}
 
-\begin{verbatim}
-## Analysis of Deviance Table
-## 
-## Model: poisson, link: log
-## 
-## Response: ngroups
-## 
-## Terms added sequentially (first to last)
-## 
-## 
-##                 Df Deviance Resid. Df Resid. Dev
-## NULL                             2900     1865.3
-## habitat          2  207.965      2898     1657.4
-## elevation        1   21.279      2897     1636.1
-## I(elevation^2)   1   33.475      2896     1602.6
-## season           1   17.408      2895     1585.2
-## as.factor(year)  3   51.290      2892     1533.9
-\end{verbatim}
+\begin{longtable}[]{@{}lrrrr@{}}
+\caption{Deviance partitioning of top-ranked
+`ngroup.hab.season.ele2.year' model for
+\textit{E. ferrugineous}}\tabularnewline
+\toprule
+& Df & Deviance & Resid. Df & Resid. Dev\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+& Df & Deviance & Resid. Df & Resid. Dev\tabularnewline
+\midrule
+\endhead
+NULL & NA & NA & 2900 & 1865.338\tabularnewline
+habitat & 2 & 207.965 & 2898 & 1657.373\tabularnewline
+elevation & 1 & 21.279 & 2897 & 1636.094\tabularnewline
+I(elevation\^{}2) & 1 & 33.475 & 2896 & 1602.619\tabularnewline
+season & 1 & 17.408 & 2895 & 1585.211\tabularnewline
+as.factor(year) & 3 & 51.290 & 2892 & 1533.921\tabularnewline
+\bottomrule
+\end{longtable}
 
-\section{Models for group size}\label{models-for-group-size}
+\subsection{Models for group size}\label{models-for-group-size}
 
 The count distribution is characterized with a spike at 2 (Figure 1),
 and by the absence of 0s due to group size being conditional on having
 \textgreater{}0 birds to consider it a group.
 
 We start developing a general V-Inflated Poisson (VIP) model (``V''
-stands for variable, in refence to the ``Z'' representing 0 in a
-zero-inflated model, or ZIP), then we add the \textgreater{}0 condition.
+stands for ``variable''``, in refence to the''Z" representing 0 in a
+zero-inflated Poisson model, or ZIP), then we add the \textgreater{}0
+condition.
 
-\subsection{Maximum likelihood}\label{maximum-likelihood}
+\subsubsection{Maximum likelihood}\label{maximum-likelihood}
 
 Let \(Y\) be a random variable, and \(y\) are observations, \(V\) is the
 count value that has some extra probability mass (\(V=0\) is the ZIP
@@ -511,40 +485,42 @@ covariate for the count (Poisson) component, and compare models with and
 without season (breeding/non-breeding) as a covariate for the
 V-inflation probability.
 
-\begin{verbatim}
-## 
-## Call:
-## vip(Y = x$count, X = X, Z = Z, V = 2, offsetx = log(x$A), truncate = TRUE, 
-##     hessian = TRUE, method = "SANN")
-## 
-## V-Inflated (Zero-Truncated) Poisson Model
-## 
-## Coefficients:
-##                      Estimate Std. Error z value Pr(>|z|)    
-## P_(Intercept)         1.00002    0.01898  52.686  < 2e-16 ***
-## P_Urban               1.75433    0.02294  76.483  < 2e-16 ***
-## P_Agropastoral        0.61163    0.03653  16.744  < 2e-16 ***
-## V_(Intercept)         1.31556    0.81619   1.612    0.107    
-## V_seasonnon-breeding -3.47379    0.83871  -4.142 3.45e-05 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
-## 
-## Log-likelihood: -1.571e+04 
-## BIC = 3.334e+04
-\end{verbatim}
+\begin{longtable}[]{@{}lrrrr@{}}
+\caption{\textit{E. ferrugineous} group size model
+estimates}\tabularnewline
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endhead
+P\_(Intercept) & 1.000 & 0.019 & 52.686 & 0.000\tabularnewline
+P\_Urban & 1.754 & 0.023 & 76.483 & 0.000\tabularnewline
+P\_Agropastoral & 0.612 & 0.037 & 16.744 & 0.000\tabularnewline
+V\_(Intercept) & 1.316 & 0.816 & 1.612 & 0.107\tabularnewline
+V\_seasonnon-breeding & -3.474 & 0.839 & -4.142 & 0.000\tabularnewline
+\bottomrule
+\end{longtable}
 
-Estimated model coefficients indicate that group sizes are larger in
-urban (\(\beta\) = 1.75) and agropastoral (\(\beta\) = 0.61) habitats
-when compared to other natural habitats. Moreover, the probability of
-there being extra pairs (i.e.~the V-inflation probability, \(\phi\)) is
-smaller in the non-breeding season (\(\beta\) = -3.47).
+Estimated model coefficients (Table 13) indicate that group sizes are
+larger in urban (\(\beta\) = 1.754) and agropastoral (\(\beta\) = 1.754)
+habitats when compared to other natural habitats. Moreover, the
+probability of there being extra pairs (i.e.~the V-inflation
+probability, \(\phi\)) is smaller in the non-breeding season (\(\beta\)
+= 1.754).
 
-Alternatively, we can estimate coefficient confidence intervals based on
-quantiles using bootstrap (with n=250):
+Alternatively, we can estimate confidence intervals based on quantiles
+using bootstrap samples (with n=30) for the estimated coefficients
+(Table 14).
 
 \begin{longtable}[]{@{}lrrr@{}}
-\caption{Estimated coefficients and 90\% CI based on bootstrap quantiles
-for \textit{E. ferrugineous} group size models}\tabularnewline
+\caption{Estimated coefficients and 90\% CI based on bootstrap sample
+(n= 30) quantiles for \textit{E. ferrugineous} group size
+models}\tabularnewline
 \toprule
 & Estimate & 5\% & 95\%\tabularnewline
 \midrule
@@ -553,11 +529,11 @@ for \textit{E. ferrugineous} group size models}\tabularnewline
 & Estimate & 5\% & 95\%\tabularnewline
 \midrule
 \endhead
-P\_(Intercept) & 1.000 & 11.768 & 22.427\tabularnewline
-P\_Urban & 1.754 & 23.047 & 14.438\tabularnewline
-P\_Agropastoral & 0.612 & 18.422 & 16.543\tabularnewline
-V\_(Intercept) & 1.316 & 18.917 & 18.027\tabularnewline
-V\_seasonnon-breeding & -3.474 & 6.256 & 15.643\tabularnewline
+P\_(Intercept) & 1.000 & -10.681 & 18.873\tabularnewline
+P\_Urban & 1.754 & -22.459 & 21.211\tabularnewline
+P\_Agropastoral & 0.612 & -17.279 & 20.264\tabularnewline
+V\_(Intercept) & 1.316 & -7.805 & 20.915\tabularnewline
+V\_seasonnon-breeding & -3.474 & -11.655 & 21.395\tabularnewline
 \bottomrule
 \end{longtable}
 
@@ -567,14 +543,14 @@ V\_seasonnon-breeding & -3.474 & 6.256 & 15.643\tabularnewline
 leptorhynchus}}{Slender-billed parakeet Enicognathus leptorhynchus}}\label{slender-billed-parakeet-enicognathus-leptorhynchus}
 
 \begin{figure}[H]
-\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-16-1} \caption{\textit{Enicognathus leptorhynchus} count frequencies}\label{fig:unnamed-chunk-16}
+\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-17-1} \caption{\textit{Enicognathus leptorhynchus} count frequencies}\label{fig:unnamed-chunk-17}
 \end{figure}
 
 \subsection{Estimating effective detection radius
 (EDR)}\label{estimating-effective-detection-radius-edr-1}
 
 \begin{longtable}[]{@{}lrrr@{}}
-\caption{\textit{E. ferrugineous} EDR models AIC}\tabularnewline
+\caption{\textit{E. leptorhynchus} EDR models AIC}\tabularnewline
 \toprule
 & df & AIC & dAIC\tabularnewline
 \midrule
@@ -599,29 +575,27 @@ The model (\texttt{EDR.avggroupsize.habitat}) has the lowest AIC (Table
 7), indicating that habitat type and average group size affect the
 effective detection radius (EDR) of \emph{Enicognathus leptorhynchus}.
 The mean EDR for each habitat, predicted using model coefficients and
-the habitat-specific means of average group size, is shown in Table 8.
+the habitat-specific means of average group size, is shown in Table 16.
 
-\begin{verbatim}
-## 
-## Call:
-## cmulti(formula = Y | D ~ gavg + Urban + Agropastoral, data = X, 
-##     type = "dis")
-## 
-## Distance Sampling (half-normal, circular area)
-## Conditional Maximum Likelihood estimates
-## 
-## Coefficients:
-##                        Estimate Std. Error    z value Pr(>|z|)    
-## log.tau_(Intercept)   5.361e+00  4.209e-51  1.274e+51   <2e-16 ***
-## log.tau_gavg          8.091e-04  8.419e-55  9.611e+50   <2e-16 ***
-## log.tau_Urban        -2.655e-01  4.209e-51 -6.308e+49   <2e-16 ***
-## log.tau_Agropastoral -2.883e-02  5.953e-51 -4.843e+48   <2e-16 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
-## 
-## Log-likelihood: -523.2 
-## BIC =  1067
-\end{verbatim}
+\begin{longtable}[]{@{}lrrrr@{}}
+\caption{\textit{E. leptorhynchus} top-ranked EDR model
+estimates}\tabularnewline
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endhead
+log.tau\_(Intercept) & 5.361 & 0 & 1.273654e+51 & 0\tabularnewline
+log.tau\_gavg & 0.001 & 0 & 9.610881e+50 & 0\tabularnewline
+log.tau\_Urban & -0.266 & 0 & -6.308165e+49 & 0\tabularnewline
+log.tau\_Agropastoral & -0.029 & 0 & -4.843080e+48 & 0\tabularnewline
+\bottomrule
+\end{longtable}
 
 \begin{longtable}[]{@{}lr@{}}
 \caption{\textit{E. leptorhynchus} habitat-specific mean EDR
@@ -640,15 +614,17 @@ Agropastoral & 180.7002\tabularnewline
 \bottomrule
 \end{longtable}
 
-\section{Models for number of
+\subsection{Models for number of
 groups}\label{models-for-number-of-groups-1}
 
 \begin{figure}[H]
-\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-20-1} \caption{\textit{Enicognathus leptorhynchus} group numbers }\label{fig:unnamed-chunk-20}
+\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-21-1} \caption{\textit{Enicognathus leptorhynchus} group numbers }\label{fig:unnamed-chunk-21}
 \end{figure}
 
-First set of models to evaluate the effect of covariates related to
-habitat (habitat type and elevation):
+\subsubsection{Model selection}\label{model-selection-1}
+
+First set of models to evaluate the effect of habitat type and elevation
+covariates (Table 18):
 
 \begin{longtable}[]{@{}lrrr@{}}
 \caption{\textit{E. leptorhynchus} number of group
@@ -669,54 +645,47 @@ ngroup.ele & 2 & 2761.122 & 273.29\tabularnewline
 \bottomrule
 \end{longtable}
 
-The models with and habitat type and elevation (linear effect)habitat
-type and elevation (quadratic effect) are equally parsimonious (Table
-9). Given their nestedness, we drop the quadratic elevation effect and
-continue with the model with habitat and linear elevation effects.
+The models `ngroup.hab.ele' (linear elevation effect) and
+`ngroup.hab.ele' (quadratic effect) are equally parsimonious (Table 18).
+Given their nestedness, we drop the quadratic term and continue with the
+model with habitat and linear elevation effects (Tables 19-20).
 
-\begin{verbatim}
-## 
-## Call:
-## glm(formula = ngroups ~ habitat + elevation, family = poisson, 
-##     data = sites, offset = log(sites$A))
-## 
-## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -4.7079  -0.4007  -0.2157  -0.1141  10.6088  
-## 
-## Coefficients:
-##                Estimate Std. Error z value Pr(>|z|)    
-## (Intercept)  -2.7809811  0.1232247 -22.568  < 2e-16 ***
-## habitatOther -2.0346998  0.1466592 -13.874  < 2e-16 ***
-## habitatUrban -0.7341155  0.1434994  -5.116 3.12e-07 ***
-## elevation     0.0004781  0.0001748   2.736  0.00622 ** 
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-## (Dispersion parameter for poisson family taken to be 1)
-## 
-##     Null deviance: 2358.9  on 2900  degrees of freedom
-## Residual deviance: 2081.0  on 2897  degrees of freedom
-## AIC: 2487.8
-## 
-## Number of Fisher Scoring iterations: 7
-\end{verbatim}
+\begin{longtable}[]{@{}lrrrr@{}}
+\caption{\textit{E. leptorhynchus} `ngroup.hab.ele' model
+estimates}\tabularnewline
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endhead
+(Intercept) & -2.781 & 0.123 & -22.568 & 0.000\tabularnewline
+habitatOther & -2.035 & 0.147 & -13.874 & 0.000\tabularnewline
+habitatUrban & -0.734 & 0.143 & -5.116 & 0.000\tabularnewline
+elevation & 0.000 & 0.000 & 2.736 & 0.006\tabularnewline
+\bottomrule
+\end{longtable}
 
-\begin{verbatim}
-## Analysis of Deviance Table
-## 
-## Model: poisson, link: log
-## 
-## Response: ngroups
-## 
-## Terms added sequentially (first to last)
-## 
-## 
-##           Df Deviance Resid. Df Resid. Dev
-## NULL                       2900     2358.9
-## habitat    2  270.326      2898     2088.5
-## elevation  1    7.512      2897     2081.0
-\end{verbatim}
+\begin{longtable}[]{@{}lrrrr@{}}
+\caption{Deviance partitioning of `ngroup.hab.ele' model for
+\textit{E. leptorhynchus}}\tabularnewline
+\toprule
+& Df & Deviance & Resid. Df & Resid. Dev\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+& Df & Deviance & Resid. Df & Resid. Dev\tabularnewline
+\midrule
+\endhead
+NULL & NA & NA & 2900 & 2358.856\tabularnewline
+habitat & 2 & 270.326 & 2898 & 2088.530\tabularnewline
+elevation & 1 & 7.512 & 2897 & 2081.018\tabularnewline
+\bottomrule
+\end{longtable}
 
 Adding within-year temporal covariates (breeding/non-breeding season and
 julian date) and their interactions with habitat:
@@ -740,41 +709,30 @@ ngroup.hab.ele.season & 5 & 2489.059 & 378.41\tabularnewline
 \bottomrule
 \end{longtable}
 
-The model with jdate*habitat interaction has the lowest AIC (Table 9).
+The model `ngroup.habXjdate.ele' has the lowest AIC (Table 21).
 
-\subsubsection{season*habitat interaction
-model}\label{seasonhabitat-interaction-model-1}
-
-\begin{verbatim}
-## 
-## Call:
-## glm(formula = ngroups ~ elevation + habitat * jdate, family = poisson, 
-##     data = sites, offset = log(sites$A))
-## 
-## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -4.6867  -0.3765  -0.0688  -0.0037   9.0194  
-## 
-## Coefficients:
-##                      Estimate Std. Error z value Pr(>|z|)    
-## (Intercept)        -1.4633740  0.1674177  -8.741  < 2e-16 ***
-## elevation           0.0003340  0.0001723   1.939 0.052549 .  
-## habitatOther        2.2340994  0.5897471   3.788 0.000152 ***
-## habitatUrban        0.4120594  0.3099620   1.329 0.183720    
-## jdate              -0.0057427  0.0005726 -10.029  < 2e-16 ***
-## habitatOther:jdate -0.0399419  0.0071459  -5.589 2.28e-08 ***
-## habitatUrban:jdate -0.0093727  0.0022889  -4.095 4.22e-05 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-## (Dispersion parameter for poisson family taken to be 1)
-## 
-##     Null deviance: 2358.9  on 2900  degrees of freedom
-## Residual deviance: 1697.8  on 2894  degrees of freedom
-## AIC: 2110.7
-## 
-## Number of Fisher Scoring iterations: 10
-\end{verbatim}
+\begin{longtable}[]{@{}lrrrr@{}}
+\caption{\textit{E. leptorhynchus} `ngroup.habXjdate.ele' model
+estimates}\tabularnewline
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endhead
+(Intercept) & -1.463 & 0.167 & -8.741 & 0.000\tabularnewline
+elevation & 0.000 & 0.000 & 1.939 & 0.053\tabularnewline
+habitatOther & 2.234 & 0.590 & 3.788 & 0.000\tabularnewline
+habitatUrban & 0.412 & 0.310 & 1.329 & 0.184\tabularnewline
+jdate & -0.006 & 0.001 & -10.029 & 0.000\tabularnewline
+habitatOther:jdate & -0.040 & 0.007 & -5.589 & 0.000\tabularnewline
+habitatUrban:jdate & -0.009 & 0.002 & -4.095 & 0.000\tabularnewline
+\bottomrule
+\end{longtable}
 
 Assess year effects by adding a year covariate (2013-2016).
 
@@ -795,84 +753,78 @@ ngroup.habXjdate.ele & 7 & 2110.653 & 116.67\tabularnewline
 \end{longtable}
 
 The model with lowest AIC indicates that the number of groups is
-affected by habitat type, elevation, julian date and year.
+affected by habitat type, elevation, julian date and year (Tables
+23-24).
 
-\begin{verbatim}
-## 
-## Call:
-## glm(formula = ngroups ~ habitat + elevation + season + as.factor(year), 
-##     family = poisson, data = sites, offset = log(sites$A))
-## 
-## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -2.9000  -0.4038  -0.2032  -0.1057   8.6857  
-## 
-## Coefficients:
-##                       Estimate Std. Error z value Pr(>|z|)    
-## (Intercept)         -3.9524864  0.2639635 -14.974  < 2e-16 ***
-## habitatOther        -1.6293917  0.1495803 -10.893  < 2e-16 ***
-## habitatUrban        -0.5062433  0.1443452  -3.507 0.000453 ***
-## elevation            0.0004645  0.0001629   2.851 0.004355 ** 
-## seasonnon-breeding  -0.7487438  0.2010999  -3.723 0.000197 ***
-## as.factor(year)2014  0.6694517  0.2764278   2.422 0.015444 *  
-## as.factor(year)2015  1.7634765  0.2366430   7.452 9.19e-14 ***
-## as.factor(year)2016  3.2799760  0.2393254  13.705  < 2e-16 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-## (Dispersion parameter for poisson family taken to be 1)
-## 
-##     Null deviance: 2358.9  on 2900  degrees of freedom
-## Residual deviance: 1579.2  on 2893  degrees of freedom
-## AIC: 1994
-## 
-## Number of Fisher Scoring iterations: 7
-\end{verbatim}
+\begin{longtable}[]{@{}lrrrr@{}}
+\caption{\textit{E. leptorhynchus} `ngroup.habXjdate.ele.year' model
+estimates}\tabularnewline
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endhead
+(Intercept) & -3.952 & 0.264 & -14.974 & 0.000\tabularnewline
+habitatOther & -1.629 & 0.150 & -10.893 & 0.000\tabularnewline
+habitatUrban & -0.506 & 0.144 & -3.507 & 0.000\tabularnewline
+elevation & 0.000 & 0.000 & 2.851 & 0.004\tabularnewline
+seasonnon-breeding & -0.749 & 0.201 & -3.723 & 0.000\tabularnewline
+as.factor(year)2014 & 0.669 & 0.276 & 2.422 & 0.015\tabularnewline
+as.factor(year)2015 & 1.763 & 0.237 & 7.452 & 0.000\tabularnewline
+as.factor(year)2016 & 3.280 & 0.239 & 13.705 & 0.000\tabularnewline
+\bottomrule
+\end{longtable}
 
-\begin{verbatim}
-## Analysis of Deviance Table
-## 
-## Model: poisson, link: log
-## 
-## Response: ngroups
-## 
-## Terms added sequentially (first to last)
-## 
-## 
-##                 Df Deviance Resid. Df Resid. Dev
-## NULL                             2900     2358.9
-## habitat          2   270.33      2898     2088.5
-## elevation        1     7.51      2897     2081.0
-## season           1     0.78      2896     2080.2
-## as.factor(year)  3   501.08      2893     1579.2
-\end{verbatim}
+\begin{longtable}[]{@{}lrrrr@{}}
+\caption{Deviance partitioning of `ngroup.habXjdate.ele.year' model for
+\textit{E. leptorhynchus}}\tabularnewline
+\toprule
+& Df & Deviance & Resid. Df & Resid. Dev\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+& Df & Deviance & Resid. Df & Resid. Dev\tabularnewline
+\midrule
+\endhead
+NULL & NA & NA & 2900 & 2358.856\tabularnewline
+habitat & 2 & 270.326 & 2898 & 2088.530\tabularnewline
+elevation & 1 & 7.512 & 2897 & 2081.018\tabularnewline
+season & 1 & 0.776 & 2896 & 2080.243\tabularnewline
+as.factor(year) & 3 & 501.078 & 2893 & 1579.165\tabularnewline
+\bottomrule
+\end{longtable}
 
-\section{Models for group size}\label{models-for-group-size-1}
+\subsection{Models for group size}\label{models-for-group-size-1}
 
-\begin{verbatim}
-## 
-## Call:
-## vip(Y = x$count, X = X, Z = Z, V = 2, offsetx = log(x$A), truncate = TRUE, 
-##     hessian = F, method = "SANN", init = c(coef(glm(x$count ~ x$Urban + 
-##         x$Agropastoral, family = poisson)), 0, 0))
-## 
-## V-Inflated (Zero-Truncated) Poisson Model
-## 
-## Coefficients:
-##                        Estimate Std. Error z value Pr(>|z|)
-## P_(Intercept)          9.348446         NA      NA       NA
-## P_Urban                4.168494         NA      NA       NA
-## P_Agropastoral        -7.553465         NA      NA       NA
-## V_(Intercept)         -0.008148         NA      NA       NA
-## V_seasonnon-breeding -10.208376         NA      NA       NA
-## 
-## Log-likelihood: -5.644e+102 
-## BIC = 1.129e+103
-\end{verbatim}
+\begin{longtable}[]{@{}lrrrr@{}}
+\caption{\textit{E. leptorhynchus} group size model
+estimates}\tabularnewline
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+& Estimate & Std. Error & z value &
+Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
+\midrule
+\endhead
+P\_(Intercept) & 9.348 & NA & NA & NA\tabularnewline
+P\_Urban & 4.168 & NA & NA & NA\tabularnewline
+P\_Agropastoral & -7.553 & NA & NA & NA\tabularnewline
+V\_(Intercept) & -0.008 & NA & NA & NA\tabularnewline
+V\_seasonnon-breeding & -10.208 & NA & NA & NA\tabularnewline
+\bottomrule
+\end{longtable}
 
 Model-fitting function cannot estimate coefficient standard errors due
-to sigular Hessian matrix. We can calculate confidence intervals based
-on quantiles using bootstrap (with n=250):
+to sigular Hessian matrix (Table 25). We can calculate confidence
+intervals based on quantiles using bootstrap (with n=30):
 
 \begin{longtable}[]{@{}lrrr@{}}
 \caption{Estimated coefficients and 90\% CI based on bootstrap quantiles
@@ -885,18 +837,18 @@ for\textit{E. leptorhynchus} group size models}\tabularnewline
 & Estimate & 5\% & 95\%\tabularnewline
 \midrule
 \endhead
-P\_(Intercept) & 9.348 & 35.312 & 27.241\tabularnewline
-P\_Urban & 4.168 & 27.080 & 21.238\tabularnewline
-P\_Agropastoral & -7.553 & 6.643 & 22.326\tabularnewline
-V\_(Intercept) & -0.008 & 20.915 & 20.694\tabularnewline
-V\_seasonnon-breeding & -10.208 & 2.320 & 23.541\tabularnewline
+P\_(Intercept) & 9.348 & -19.287 & 29.098\tabularnewline
+P\_Urban & 4.168 & -15.801 & 24.797\tabularnewline
+P\_Agropastoral & -7.553 & -19.140 & 17.682\tabularnewline
+V\_(Intercept) & -0.008 & -14.403 & 25.502\tabularnewline
+V\_seasonnon-breeding & -10.208 & -26.835 & 25.664\tabularnewline
 \bottomrule
 \end{longtable}
 
 \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
-\section{VIP model - R functions and
-simulations}\label{vip-model---r-functions-and-simulations}
+\section{VIP model - R functions and simulations (author: Peter
+Sólymos)}\label{vip-model---r-functions-and-simulations-author-peter-solymos}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1277,7 +1229,7 @@ part}\label{covariates-for-the-non-v-part}
 ## [1] 114741.5
 \end{verbatim}
 
-\section{Zero-truncated VIP}\label{zero-truncated-vip}
+\subsection{Zero-truncated VIP}\label{zero-truncated-vip}
 
 We can truncate counts to be larger than 0. We also need \(V>0\) (for
 \(V=0\) case, look into ZIP or conditional Poisson model). Conceptually,
