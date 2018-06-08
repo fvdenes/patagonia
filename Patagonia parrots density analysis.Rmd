@@ -7,7 +7,6 @@ output:
     fig_caption: yes
     keep_tex: yes
   word_document: 
-    fig_caption: yes
   html_document:
     df_print: paged
 header-includes: \usepackage{float}
