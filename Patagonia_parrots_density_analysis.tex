@@ -243,8 +243,9 @@ EDR, and is added to the model as an offset.
 
 \subsubsection{Model selection}\label{model-selection}
 
-We build a first set of models to evaluate the effect of covariates
-related to habitat (habitat type and elevation).
+For number of groups, we use a stage-wise selection procedure. First, we
+build a first set of models to evaluate the effect of covariates related
+to habitat (habitat type and elevation).
 
 \begin{longtable}[]{@{}lrrr@{}}
 \caption{\textit{E. ferrugineous} number of group models}\tabularnewline
@@ -463,6 +464,9 @@ stands for ``variable''``, in refence to the''Z" representing 0 in a
 zero-inflated Poisson model, or ZIP), then we add the \textgreater{}0
 condition.
 
+R functions for the VIP model are presented at the end of this document,
+including simulations to check the estimating procedure.
+
 \subsubsection{Maximum likelihood}\label{maximum-likelihood}
 
 Let \(Y\) be a random variable, and \(y\) are observations, \(V\) is the
@@ -475,15 +479,12 @@ The V-Inflated density can be written as
 \(\phi + (1-\phi) f(V; \lambda)\) when \(Y=V\) and
 \((1-\phi) f(y; \lambda)\) otherwise.
 
-R functions for the VIP model are presented at the end of this document.
-Simulations are done to check the estimating procedure.
-
-We define the extra probability mass at \texttt{V=2} to account for the
-group size peak in pairs. The model is also truncated at 0, because
-there are no groups with 0 individuals. We include habitat type as a
-covariate for the count (Poisson) component, and compare models with and
-without season (breeding/non-breeding) as a covariate for the
-V-inflation probability.
+We define the extra probability mass at \(V=2\) to account for the group
+size peak in pairs. The model is also truncated at 0, because there are
+no groups with 0 individuals. We include habitat type as a covariate for
+the count (Poisson) component, and compare models with and without
+season (breeding/non-breeding) as a covariate for the V-inflation
+probability.
 
 \begin{longtable}[]{@{}lrrrr@{}}
 \caption{\textit{E. ferrugineous} group size model
@@ -513,27 +514,48 @@ probability of there being extra pairs (i.e.~the V-inflation
 probability, \(\phi\)) is smaller in the non-breeding season (\(\beta\)
 = 1.754).
 
-Alternatively, we can estimate confidence intervals based on quantiles
-using bootstrap samples (with n=30) for the estimated coefficients
-(Table 14).
+Considence intervals (CI) based on estimated standard errors can be
+obtained (Table 14):
 
-\begin{longtable}[]{@{}lrrr@{}}
-\caption{Estimated coefficients and 90\% CI based on bootstrap sample
-(n= 30) quantiles for \textit{E. ferrugineous} group size
-models}\tabularnewline
+\begin{longtable}[]{@{}lrr@{}}
+\caption{\textit{E. ferrugineous} group size model CI}\tabularnewline
 \toprule
-& Estimate & 5\% & 95\%\tabularnewline
+& 2.5\% & 97.5\%\tabularnewline
 \midrule
 \endfirsthead
 \toprule
-& Estimate & 5\% & 95\%\tabularnewline
+& 2.5\% & 97.5\%\tabularnewline
 \midrule
 \endhead
-P\_(Intercept) & 1.000 & -10.681 & 18.873\tabularnewline
-P\_Urban & 1.754 & -22.459 & 21.211\tabularnewline
-P\_Agropastoral & 0.612 & -17.279 & 20.264\tabularnewline
-V\_(Intercept) & 1.316 & -7.805 & 20.915\tabularnewline
-V\_seasonnon-breeding & -3.474 & -11.655 & 21.395\tabularnewline
+P\_(Intercept) & 0.963 & 1.037\tabularnewline
+P\_Urban & 1.709 & 1.799\tabularnewline
+P\_Agropastoral & 0.540 & 0.683\tabularnewline
+V\_(Intercept) & -0.284 & 2.915\tabularnewline
+V\_seasonnon-breeding & -5.118 & -1.830\tabularnewline
+\bottomrule
+\end{longtable}
+
+Alternatively, we can estimate confidence intervals based on quantiles
+using bootstrap samples (with n=250) for the estimated coefficients
+(Table 15).
+
+\begin{longtable}[]{@{}lrrr@{}}
+\caption{Estimated coefficients and 95\% CI based on bootstrap sample
+(n= 250) quantiles for \textit{E. ferrugineous} group size
+models}\tabularnewline
+\toprule
+& Estimate & 2.5\% & 97.5\%\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+& Estimate & 2.5\% & 97.5\%\tabularnewline
+\midrule
+\endhead
+P\_(Intercept) & 1.000 & -12.020 & 25.522\tabularnewline
+P\_Urban & 1.754 & -22.160 & 21.170\tabularnewline
+P\_Agropastoral & 0.612 & -21.680 & 22.715\tabularnewline
+V\_(Intercept) & 1.316 & -22.402 & 20.646\tabularnewline
+V\_seasonnon-breeding & -3.474 & -15.569 & 26.420\tabularnewline
 \bottomrule
 \end{longtable}
 
@@ -543,11 +565,13 @@ V\_seasonnon-breeding & -3.474 & -11.655 & 21.395\tabularnewline
 leptorhynchus}}{Slender-billed parakeet Enicognathus leptorhynchus}}\label{slender-billed-parakeet-enicognathus-leptorhynchus}
 
 \begin{figure}[H]
-\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-17-1} \caption{\textit{Enicognathus leptorhynchus} count frequencies}\label{fig:unnamed-chunk-17}
+\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-18-1} \caption{\textit{Enicognathus leptorhynchus} count frequencies}\label{fig:unnamed-chunk-18}
 \end{figure}
 
 \subsection{Estimating effective detection radius
 (EDR)}\label{estimating-effective-detection-radius-edr-1}
+
+We follow the same procedure used for the austral parakeet above.
 
 \begin{longtable}[]{@{}lrrr@{}}
 \caption{\textit{E. leptorhynchus} EDR models AIC}\tabularnewline
@@ -572,10 +596,10 @@ EDR.numbergroups & 2 & 1087.172 & 32.71\tabularnewline
 \end{longtable}
 
 The model (\texttt{EDR.avggroupsize.habitat}) has the lowest AIC (Table
-7), indicating that habitat type and average group size affect the
+16), indicating that habitat type and average group size affect the
 effective detection radius (EDR) of \emph{Enicognathus leptorhynchus}.
 The mean EDR for each habitat, predicted using model coefficients and
-the habitat-specific means of average group size, is shown in Table 16.
+the habitat-specific means of average group size, is shown in Table 17.
 
 \begin{longtable}[]{@{}lrrrr@{}}
 \caption{\textit{E. leptorhynchus} top-ranked EDR model
@@ -617,8 +641,15 @@ Agropastoral & 180.7002\tabularnewline
 \subsection{Models for number of
 groups}\label{models-for-number-of-groups-1}
 
+As for the austral parakeet, the model for number of groups is
+G\textsubscript{i} \textasciitilde{}
+Poisson(D\textsubscript{i}A\textsubscript{i}), where D\textsubscript{i}
+= covariates and A\textsubscript{i} = area sampled in site \emph{i}.
+A\textsubscript{i} is calculated using the habitat-specific estimated
+EDR, and is added to the model as an offset.
+
 \begin{figure}[H]
-\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-21-1} \caption{\textit{Enicognathus leptorhynchus} group numbers }\label{fig:unnamed-chunk-21}
+\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-22-1} \caption{\textit{Enicognathus leptorhynchus} group numbers }\label{fig:unnamed-chunk-22}
 \end{figure}
 
 \subsubsection{Model selection}\label{model-selection-1}
@@ -637,18 +668,20 @@ models}\tabularnewline
 & df & AIC & dAIC\tabularnewline
 \midrule
 \endhead
-ngroup.hab.ele2 & 5 & 2486.990 & -0.84\tabularnewline
-ngroup.hab.ele & 4 & 2487.834 & 0.00\tabularnewline
-ngroup.hab & 3 & 2493.346 & 5.51\tabularnewline
-ngroup.ele2 & 3 & 2746.031 & 258.20\tabularnewline
-ngroup.ele & 2 & 2761.122 & 273.29\tabularnewline
+ngroup.hab.ele2 & 5 & 2486.990 & 0.00\tabularnewline
+ngroup.hab.ele & 4 & 2487.834 & 0.84\tabularnewline
+ngroup.hab & 3 & 2493.346 & 6.36\tabularnewline
+ngroup.ele2 & 3 & 2746.031 & 259.04\tabularnewline
+ngroup.ele & 2 & 2761.122 & 274.13\tabularnewline
 \bottomrule
 \end{longtable}
 
-The models `ngroup.hab.ele' (linear elevation effect) and
-`ngroup.hab.ele' (quadratic effect) are equally parsimonious (Table 18).
-Given their nestedness, we drop the quadratic term and continue with the
-model with habitat and linear elevation effects (Tables 19-20).
+The models `ngroup.hab.ele' (with linear elevation effect) and
+`ngroup.hab.ele2' (with quadratic effect) are equally parsimonious
+(Table 18), but the quadratic term in the latter is mostly uniformative
+(Tables 19-20). Given these are nested models, we drop the quadratic
+term and continue with the model with habitat and linear elevation
+effects.
 
 \begin{longtable}[]{@{}lrrrr@{}}
 \caption{\textit{E. leptorhynchus} `ngroup.hab.ele' model
@@ -734,7 +767,7 @@ habitatUrban:jdate & -0.009 & 0.002 & -4.095 & 0.000\tabularnewline
 \bottomrule
 \end{longtable}
 
-Assess year effects by adding a year covariate (2013-2016).
+Finally, we assess year effects by adding a year covariate (2013-2016).
 
 \begin{longtable}[]{@{}lrrr@{}}
 \caption{\textit{E. leptorhynchus} number of group models (year
@@ -752,9 +785,8 @@ ngroup.habXjdate.ele & 7 & 2110.653 & 116.67\tabularnewline
 \bottomrule
 \end{longtable}
 
-The model with lowest AIC indicates that the number of groups is
-affected by habitat type, elevation, julian date and year (Tables
-23-24).
+The best-ranked model indicates that the number of groups is affected by
+habitat type, elevation, julian date and year (Tables 23-24).
 
 \begin{longtable}[]{@{}lrrrr@{}}
 \caption{\textit{E. leptorhynchus} `ngroup.habXjdate.ele.year' model
@@ -824,31 +856,33 @@ V\_seasonnon-breeding & -10.208 & NA & NA & NA\tabularnewline
 
 Model-fitting function cannot estimate coefficient standard errors due
 to sigular Hessian matrix (Table 25). We can calculate confidence
-intervals based on quantiles using bootstrap (with n=30):
+intervals based on quantiles using bootstrap (with n=250):
 
 \begin{longtable}[]{@{}lrrr@{}}
-\caption{Estimated coefficients and 90\% CI based on bootstrap quantiles
+\caption{Estimated coefficients and 95\% CI based on bootstrap quantiles
 for\textit{E. leptorhynchus} group size models}\tabularnewline
 \toprule
-& Estimate & 5\% & 95\%\tabularnewline
+& Estimate & 2.5\% & 97.5\%\tabularnewline
 \midrule
 \endfirsthead
 \toprule
-& Estimate & 5\% & 95\%\tabularnewline
+& Estimate & 2.5\% & 97.5\%\tabularnewline
 \midrule
 \endhead
-P\_(Intercept) & 9.348 & -19.287 & 29.098\tabularnewline
-P\_Urban & 4.168 & -15.801 & 24.797\tabularnewline
-P\_Agropastoral & -7.553 & -19.140 & 17.682\tabularnewline
-V\_(Intercept) & -0.008 & -14.403 & 25.502\tabularnewline
-V\_seasonnon-breeding & -10.208 & -26.835 & 25.664\tabularnewline
+P\_(Intercept) & 9.348 & -20.918 & 30.698\tabularnewline
+P\_Urban & 4.168 & -26.730 & 26.184\tabularnewline
+P\_Agropastoral & -7.553 & -25.738 & 25.361\tabularnewline
+V\_(Intercept) & -0.008 & -24.252 & 25.802\tabularnewline
+V\_seasonnon-breeding & -10.208 & -25.553 & 27.833\tabularnewline
 \bottomrule
 \end{longtable}
 
 \begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
-\section{VIP model - R functions and simulations (author: Peter
-Sólymos)}\label{vip-model---r-functions-and-simulations-author-peter-solymos}
+\section{VIP model - R functions and
+simulations}\label{vip-model---r-functions-and-simulations}
+
+\subsubsection{Peter Sólymos}\label{peter-solymos}
 
 \begin{Shaded}
 \begin{Highlighting}[]
