@@ -343,8 +343,18 @@ goodness <- function(object, maxcount=NULL) {
     P_exp <- colMeans(Pmat)
     cbind(P_obs=P_obs, P_exp=P_exp)
 }
-gof <- goodness(mod)
-plot(gof, type="b")
+
+## fit null model
+mod0 <- vip(Y=y, X=X[,1,drop=FALSE], Z=Z[,1,drop=FALSE], V=2, truncate=TRUE)
+## calculate GoF for null and other model
+(gof0 <- goodness(mod0))
+(gof <- goodness(mod))
+## better model is closer to the 1:1 line
+plot(gof0, type="b", col=2)
+points(gof, type="b", col=4)
 abline(0, 1, lty=2)
+## better model will give smaller absolute deviation
+sum(abs(apply(gof0, 1, diff)))
+sum(abs(apply(gof, 1, diff)))
 ```
 
