@@ -115,6 +115,7 @@ truncate=FALSE, hessian=TRUE, method="Nelder-Mead", init=NULL, ...) {
         opt <- DEoptim(fn=nll, lower=lo, upper=up,
             control=list(trace=FALSE, itermax=length(init)*200))
         par <- opt$optim$bestmem
+        names(par) <- c(paste0("P_", colnames(X)), paste0("V_", colnames(Z)))
         ll <- -opt$optim$bestval
         if (hessian) {
             hess <- optimHess(opt$optim$bestmem, nll)

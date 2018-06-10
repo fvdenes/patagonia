@@ -10,8 +10,10 @@ output:
   html_document:
     df_print: paged
 header-includes: \usepackage{float}
-editor_options:
-  chunk_output_type: inline
+
+editor_options: 
+  chunk_output_type: console
+
 ---
 
 
@@ -246,7 +248,10 @@ $(1-\phi) f(y; \lambda)$ otherwise.
 
 
 
-```{r, echo=F}
+```{r, echo=F, warning=F, message=F}
+library(DEoptim)
+library(Matrix)
+
 vip <-
 function(Y, X, Z, V=0,
 offsetx, offsetz, weights, linkz="logit",
@@ -300,20 +305,50 @@ truncate=FALSE, hessian=TRUE, method="Nelder-Mead", init=NULL, ...) {
             loglik <- -good.num.limit[2]
         -loglik
     }
-
+    .solvenear <-
+    function(x)
+    {
+        xinv <- try(solve(x), silent = TRUE)
+        if (inherits(xinv, "try-error"))
+            xinv <- as.matrix(solve(Matrix::nearPD(x)$mat))
+        xinv
+    }
     if (is.null(init))
-      init <- rep(0, kx+kz)
-    opt <- optim(init,
-        if (truncate) nll_VIP_TR else nll_VIP_ML,
-        hessian=hessian, method=method, ...)
-    par <- opt$par
-    names(par) <- c(paste0("P_", colnames(X)), paste0("V_", colnames(Z)))
-    vc <- if (hessian)
-        solve(opt$hessian) else matrix(NA, length(par), length(par))
+
+        init <- rep(0, kx+kz)
+    nll <- if (truncate) nll_VIP_TR else nll_VIP_ML
+
+    if (method == "DE") {
+        DElimit <- 10
+        up <- rep(DElimit, length(init))
+        lo <- -up
+        opt <- DEoptim(fn=nll, lower=lo, upper=up,
+            control=list(trace=FALSE, itermax=length(init)*200))
+        par <- opt$optim$bestmem
+        names(par) <- c(paste0("P_", colnames(X)), paste0("V_", colnames(Z)))
+        ll <- -opt$optim$bestval
+        if (hessian) {
+            hess <- optimHess(opt$optim$bestmem, nll)
+            vc <- .solvenear(hess)
+        } else {
+            matrix(NA, length(par), length(par))
+        }
+    } else {
+        opt <- optim(init, nll,
+            hessian=hessian, method=method, ...)
+        par <- opt$par
+        names(par) <- c(paste0("P_", colnames(X)), paste0("V_", colnames(Z)))
+        vc <- if (hessian)
+            .solvenear(opt$hessian) else matrix(NA, length(par), length(par))
+        ll <- -opt$value
+    }
+
     dimnames(vc) <- list(names(par), names(par))
     out <- list(call=match.call(),
-        coefficients=par, loglik=-opt$value, vcov=vc, nobs=n,
-        truncate=truncate)
+        coefficients=par, loglik=ll, vcov=vc, nobs=n,
+        truncate=truncate, Y=Y, X=X, Z=Z, V=V,
+        offsetx=offsetx, offsetz=offsetz, weights=weights, 
+        linkz=linkz, method=method, init=init)
     class(out) <- "vip"
     out
 }
@@ -374,6 +409,52 @@ function (object, parm, level = 0.95, ...)
     ci[] <- cf[parm] + ses[parm] %o% fac
     ci
 }
+
+goodness <- function(object, maxcount=NULL) {
+    if (is.null(maxcount))
+        maxcount <- max(object$Y)
+    COUNTS <- if (object$truncate)
+        1L:max(object$Y) else 0L:maxcount
+    
+    P_obs <- table(object$Y) / nobs(object)
+    P_obs <- as.numeric(P_obs[match(COUNTS, names(P_obs))])
+    P_obs[is.na(P_obs)] <- 0
+    names(P_obs) <- COUNTS
+    
+    P_exp <- P_obs
+    P_exp[] <- 0
+    
+    linkinvx <- poisson("log")$linkinv
+    linkinvz <- binomial(object$linkz)$linkinv
+    parms <- coef(object)
+    kx <- ncol(object$X)
+    kz <- ncol(object$Z)
+    mu <- as.vector(linkinvx(object$X %*% parms[1:kx] + object$offsetx))
+    phi <- as.vector(linkinvz(object$Z %*% parms[(kx + 1):(kx + kz)] + object$offsetz))
+    #id0 <- object$Y == object$V
+    Pmat <- matrix(0, nobs(object), length(COUNTS))
+    colnames(Pmat) <- COUNTS
+    
+    PV <- if (object$truncate) {
+        log(phi + (1 - phi) * dpois(object$V, 
+            lambda = mu, log = FALSE) / (1-exp(-mu)))
+    } else {
+        log(phi + (1 - phi) * dpois(object$V, lambda = mu, log = FALSE))
+    }
+    for (i in COUNTS) {
+        PC <- if (object$truncate) {
+            log((1 - phi) * dpois(i, lambda = mu, log = FALSE) / (1-exp(-mu)))
+        } else {
+            log(1 - phi) + dpois(i, lambda = mu, log = TRUE)
+        }
+        Pmat[,as.character(i)] <- if (i == object$V)
+            exp(PV) else exp(PC)
+    }
+    P_exp <- colMeans(Pmat)
+    cbind(P_obs=P_obs, P_exp=P_exp)
+}
+
+
 ```
 
 We define the extra probability mass at $V=2$ to account for the group size peak in pairs. The model is also truncated at 0, because there are no groups with 0 individuals. We include habitat type as a covariate for the count (Poisson) component, and compare models with and without season (breeding/non-breeding) as a covariate for the V-inflation probability.
@@ -392,22 +473,49 @@ Z <- model.matrix(~season, x)
 
 
 set.seed(333)
-VIP.habitat.season <- vip(Y=x$count, X=X, offsetx=log(x$A), V=2, Z=Z, truncate=TRUE, hessian=TRUE, method="SANN")
-
-kable(summary(VIP.habitat.season)$coefficients,digits = 3,caption="\\textit{E. ferrugineous} group size model estimates")
-
-nboot<-250
+VIP.habitat.season <- vip(Y=x$count, X=X, offsetx=log(x$A), V=2, Z=Z, truncate=TRUE, hessian=TRUE, method="DE")
 ```
 
-Estimated model coefficients (Table 13) indicate that group sizes are larger in urban ($\beta$ = `r round(coef(VIP.habitat.season)[2],3)`) and agropastoral ($\beta$ = `r round(coef(VIP.habitat.season)[2],3)`) habitats when compared to other natural habitats. Moreover, the probability of there being extra pairs (i.e. the V-inflation probability, $\phi$) is smaller in the non-breeding season ($\beta$ = `r round(coef(VIP.habitat.season)[2],3)`).
+### Goodness-of-fit
 
-Confidence intervals (CI) based on estimated standard errors can be obtained (Table 14):
+Model goodness-of-fit can be evaluated visually, inspecting the proportions of fitted values against the count distribution. Deviation from the 1:1 line can be used as a goodness-of-fit metric, with the better model showing smaller deviation. 
+
+```{r, echo=FALSE, warning=F,message=F,fig.cap="\\textit{Enicognathus ferrugineus} group size model goodness-of-fit (red: null model; blue: habitat.season model). Better model is closer to 1:1 line.",out.extra=''}
+# Goodness of fit test
+## fit null model
+mod0 <- vip(Y=x$count, X=X[,1,drop=FALSE], Z=Z[,1,drop=FALSE], V=2, truncate=TRUE, method="DE")
+## calculate GoF for null and other model
+gof0 <- goodness(mod0)
+gof <- goodness(VIP.habitat.season)
+## better model is closer to the 1:1 line
+plot(gof0, type="b", col=2)
+points(gof, type="b", col=4)
+abline(0, 1, lty=2)
+## better model will give smaller absolute deviation
+#sum(abs(apply(gof0, 1, diff)))
+#sum(abs(apply(gof, 1, diff)))
+
+nboot<-10
+```
+
+
+The deviation of null model is `r round(sum(abs(apply(gof0, 1, diff))),2)`, and of the VIP.habitat.season model is `r round(sum(abs(apply(gof, 1, diff))),2)`. 
+
+### Confidence intervals for model estimates  
+  
+Estimated model coefficients (Table 13) indicate that group sizes are larger in urban ($\beta$ = `r round(coef(VIP.habitat.season)[2],3)`) and agropastoral ($\beta$ = `r round(coef(VIP.habitat.season)[2],3)`) habitats when compared to other natural habitats. Moreover, the probability of there being extra pairs (i.e. the V-inflation probability, $\phi$) is smaller in the non-breeding season ($\beta$ = `r round(coef(VIP.habitat.season)[2],3)`).   
+
+```{r, echo=FALSE, warning=F,message=F}
+kable(summary(VIP.habitat.season)$coefficients,digits = 3,caption="\\textit{E. ferrugineous} group size model estimates")
+```
+
+Confidence intervals (CI) based on estimated standard errors can be obtained (Table 14):  
 
 ```{r, echo=FALSE, warning=F,message=F}
 kable(confint(VIP.habitat.season),digits = 3,caption="\\textit{E. ferrugineous} group size model CI")
 ```
 
-Alternatively, we can estimate confidence intervals based on quantiles using bootstrap samples (with n=`r nboot`) for the estimated coefficients (Table 15).
+Alternatively, we can estimate confidence intervals based on quantiles using bootstrap samples (with n=`r nboot`) for the estimated coefficients (Table 15).  
 
 ```{r, echo=FALSE, warning=F,message=F}
 ## Bootstrapping for the model:
@@ -437,7 +545,8 @@ VIP.model.fun<-function(df){
 
   inits<-c(coef(glm(x$count~x$Urban+x$Agropastoral,family=poisson)),0,0)
 
-  VIP.habitat.season <- vip(Y=df$count, X=X, offsetx=log(df$A), V=2, Z=Z, truncate=TRUE, hessian=F, method="SANN", init=inits)
+  
+  VIP.habitat.season <- vip(Y=df$count, X=X, offsetx=log(df$A), V=2, Z=Z, truncate=TRUE, hessian=T, method="DE", init=inits)
 }
 
 VIPs<-lapply(dflist,VIP.model.fun)
@@ -446,20 +555,10 @@ VIPs<-lapply(dflist,VIP.model.fun)
 # get means from coefs, and CI based on quantiles
 VIP.boot.coefs<-mapply(FUN=function(x){coef(x)},VIPs)
 
-phi<-VIP.boot.coefs-coef(VIP.habitat.season)
-quant<-apply(phi,1,quantile,probs=c(0.025,0.975))
-
-coefCIs<-t(rbind((coef(VIP.habitat.season)),rbind(coef(VIP.habitat.season)-abs(quant[1,]),coef(VIP.habitat.season)+abs(quant[2,]))))
+VIP.boot.coefs<-rbind(coef(VIP.habitat.season), t(sapply(VIPs, coef)))
+coefCIs<-t(rbind(VIP.boot.coefs[1,], apply(VIP.boot.coefs, 2, quantile, c(0.025,0.975))))
 colnames(coefCIs)<-c("Estimate","2.5%","97.5%")
 
-## here is how Peter would do it
-if (FALSE) {
-
-VIP.boot.coefs<-rbind(coef(VIP.boot.coefs), t(sapply(VIPs, coef)))
-coefCIs<-cbind(VIP.boot.coefs[1,], apply(VIP.boot.coefs, 2, quantile, c(0.025,0.975)))
-colnames(coefCIs)<-c("Estimate","2.5%","97.5%")
-
-}
 
 kable(round(coefCIs,3),caption =paste0("Estimated coefficients and 95% CI based on bootstrap sample (n= ",nboot ,") quantiles for \\textit{E. ferrugineous} group size models"))
 
@@ -696,10 +795,38 @@ row.names(x)<-1:nrow(x)
 X <- model.matrix(~Urban+Agropastoral,x)
 Z <- model.matrix(~season, x)
 
-set.seed(123)
-VIP.habitat.season <- vip(Y=x$count, X=X, offsetx=log(x$A), V=2, Z=Z, truncate=TRUE, hessian=F, method="SANN", init=c(coef(glm(x$count~x$Urban+x$Agropastoral,family=poisson)),0,0))
+set.seed(333)
+#VIP.habitat.season <- vip(Y=x$count, X=X, offsetx=log(x$A), V=2, Z=Z, truncate=TRUE, hessian=F, method="DE", init=c(coef(glm(x$count~x$Urban+x$Agropastoral,family=poisson)),0,0))
 
+VIP.habitat.season <- vip(Y=x$count, X=X, offsetx=log(x$A), V=2, Z=Z, truncate=TRUE, hessian=FALSE, method="SANN", init=c(coef(glm(x$count~x$Urban+x$Agropastoral,family=poisson)),0,0))
+```
 
+### Goodness-of-fit
+
+Model goodness-of-fit can be evaluated visually, inspecting the proportions of fitted values against the count distribution. Deviation from the 1:1 line can be used as a goodness-of-fit metric, with the better model showing smaller deviation. 
+
+```{r, echo=FALSE, warning=F,message=F,fig.cap="\\textit{Enicognathus leptorhynchus} group size model goodness-of-fit (red: null model; blue: habitat.season model). Better model is closer to 1:1 line.",out.extra=''}
+# Goodness of fit test
+## fit null model
+mod0 <- vip(Y=x$count, X=X[,1,drop=FALSE], Z=Z[,1,drop=FALSE], V=2, truncate=TRUE, method="DE")
+## calculate GoF for null and other model
+gof0 <- goodness(mod0)
+gof <- goodness(VIP.habitat.season)
+## better model is closer to the 1:1 line
+plot(gof0, type="b", col=2)
+points(gof, type="b", col=4)
+abline(0, 1, lty=2)
+## better model will give smaller absolute deviation
+#sum(abs(apply(gof0, 1, diff)))
+#sum(abs(apply(gof, 1, diff)))
+
+nboot<-10
+```
+
+The deviation of null model is `r round(sum(abs(apply(gof0, 1, diff))),2)`, and of the VIP.habitat.season model is `r round(sum(abs(apply(gof, 1, diff))),2)`. 
+
+### Confidence intervals for model estimates  
+```{r, echo=FALSE, warning=F,message=F}
 kable(summary(VIP.habitat.season)$coefficients,digits = 3,caption="\\textit{E. leptorhynchus} group size model estimates")
 ```
 
@@ -742,11 +869,10 @@ VIPs<-lapply(dflist,VIP.model.fun)
 # get means from coefs, and CI based on quantiles
 VIP.boot.coefs<-mapply(FUN=function(x){coef(x)},VIPs)
 
-phi<-VIP.boot.coefs-coef(VIP.habitat.season)
-
-quant<-apply(phi,1,quantile,probs=c(0.025,0.975))
-coefCIs<-t(rbind((coef(VIP.habitat.season)),rbind(coef(VIP.habitat.season)-abs(quant[1,]),coef(VIP.habitat.season)+abs(quant[2,]))))
+VIP.boot.coefs<-rbind(coef(VIP.habitat.season), t(sapply(VIPs, coef)))
+coefCIs<-t(rbind(VIP.boot.coefs[1,], apply(VIP.boot.coefs, 2, quantile, c(0.025,0.975))))
 colnames(coefCIs)<-c("Estimate","2.5%","97.5%")
+
 
 kable(round(coefCIs,3),caption ="Estimated coefficients and 95% CI based on bootstrap quantiles for \\textit{E. leptorhynchus} group size models")
 
@@ -756,7 +882,15 @@ kable(round(coefCIs,3),caption ="Estimated coefficients and 95% CI based on boot
 # VIP model - R functions and simulations
 ###Peter SC3lymos
 
+## Functions
+
+The `vip` function does the optimization. `method` argument can take values
+listed for `optim` and also `"DE"` for differential evolution algorithm.
+If there are convergence issues with `"Nelder-Mead"`, try `"SANN"` and `"DE"`.
+
 ```{r}
+library(DEoptim)
+library(Matrix)
 vip <-
 function(Y, X, Z, V=0,
 offsetx, offsetz, weights, linkz="logit",
@@ -810,20 +944,49 @@ truncate=FALSE, hessian=TRUE, method="Nelder-Mead", init=NULL, ...) {
             loglik <- -good.num.limit[2]
         -loglik
     }
-
+    .solvenear <-
+    function(x)
+    {
+        xinv <- try(solve(x), silent = TRUE)
+        if (inherits(xinv, "try-error"))
+            xinv <- as.matrix(solve(Matrix::nearPD(x)$mat))
+        xinv
+    }
     if (is.null(init))
-      init <- rep(0, kx+kz)
-    opt <- optim(init,
-        if (truncate) nll_VIP_TR else nll_VIP_ML,
-        hessian=hessian, method=method, ...)
-    par <- opt$par
-    names(par) <- c(paste0("P_", colnames(X)), paste0("V_", colnames(Z)))
-    vc <- if (hessian)
-        solve(opt$hessian) else matrix(NA, length(par), length(par))
+
+        init <- rep(0, kx+kz)
+    nll <- if (truncate) nll_VIP_TR else nll_VIP_ML
+
+    if (method == "DE") {
+        DElimit <- 10
+        up <- rep(DElimit, length(init))
+        lo <- -up
+        opt <- DEoptim(fn=nll, lower=lo, upper=up,
+            control=list(trace=FALSE, itermax=length(init)*200))
+        par <- opt$optim$bestmem
+        names(par) <- c(paste0("P_", colnames(X)), paste0("V_", colnames(Z)))
+        ll <- -opt$optim$bestval
+        if (hessian) {
+            hess <- optimHess(opt$optim$bestmem, nll)
+            vc <- .solvenear(hess)
+        } else {
+            matrix(NA, length(par), length(par))
+        }
+    } else {
+        opt <- optim(init, nll,
+            hessian=hessian, method=method, ...)
+        par <- opt$par
+        names(par) <- c(paste0("P_", colnames(X)), paste0("V_", colnames(Z)))
+        vc <- if (hessian)
+            .solvenear(opt$hessian) else matrix(NA, length(par), length(par))
+        ll <- -opt$value
+    }
     dimnames(vc) <- list(names(par), names(par))
     out <- list(call=match.call(),
-        coefficients=par, loglik=-opt$value, vcov=vc, nobs=n,
-        truncate=truncate)
+        coefficients=par, loglik=ll, vcov=vc, nobs=n,
+        truncate=truncate, Y=Y, X=X, Z=Z, V=V,
+        offsetx=offsetx, offsetz=offsetz, weights=weights, 
+        linkz=linkz, method=method, init=init)
     class(out) <- "vip"
     out
 }
@@ -909,7 +1072,7 @@ cbind(True=c(log_lam=log(lam), logit_phi=qlogis(phi)),
 
 ```{r}
 set.seed(123)
-n <- 10000
+n <- 1000
 x <- rnorm(n)
 df <- data.frame(x=x)
 X <- model.matrix(~x, df)
@@ -941,7 +1104,7 @@ BIC(mod)
 ```
 
 
-## Zero-truncated VIP
+# Zero-truncated VIP
 
 We can truncate counts to be larger than 0. We also need $V>0$
 (for $V=0$ case, look into ZIP or conditional Poisson model).
@@ -984,4 +1147,63 @@ cbind(True=c(beta=beta, alpha=alpha),
       Est=coef(mod))
 ```
 
+# Goodness of fit
 
+```{r}
+goodness <- function(object, maxcount=NULL) {
+    if (is.null(maxcount))
+        maxcount <- max(object$Y)
+    COUNTS <- if (object$truncate)
+        1L:max(object$Y) else 0L:maxcount
+    
+    P_obs <- table(object$Y) / nobs(object)
+    P_obs <- as.numeric(P_obs[match(COUNTS, names(P_obs))])
+    P_obs[is.na(P_obs)] <- 0
+    names(P_obs) <- COUNTS
+    
+    P_exp <- P_obs
+    P_exp[] <- 0
+    
+    linkinvx <- poisson("log")$linkinv
+    linkinvz <- binomial(object$linkz)$linkinv
+    parms <- coef(object)
+    kx <- ncol(object$X)
+    kz <- ncol(object$Z)
+    mu <- as.vector(linkinvx(object$X %*% parms[1:kx] + object$offsetx))
+    phi <- as.vector(linkinvz(object$Z %*% parms[(kx + 1):(kx + kz)] + object$offsetz))
+    #id0 <- object$Y == object$V
+    Pmat <- matrix(0, nobs(object), length(COUNTS))
+    colnames(Pmat) <- COUNTS
+    
+    PV <- if (object$truncate) {
+        log(phi + (1 - phi) * dpois(object$V, 
+            lambda = mu, log = FALSE) / (1-exp(-mu)))
+    } else {
+        log(phi + (1 - phi) * dpois(object$V, lambda = mu, log = FALSE))
+    }
+    for (i in COUNTS) {
+        PC <- if (object$truncate) {
+            log((1 - phi) * dpois(i, lambda = mu, log = FALSE) / (1-exp(-mu)))
+        } else {
+            log(1 - phi) + dpois(i, lambda = mu, log = TRUE)
+        }
+        Pmat[,as.character(i)] <- if (i == object$V)
+            exp(PV) else exp(PC)
+    }
+    P_exp <- colMeans(Pmat)
+    cbind(P_obs=P_obs, P_exp=P_exp)
+}
+
+## fit null model
+mod0 <- vip(Y=y, X=X[,1,drop=FALSE], Z=Z[,1,drop=FALSE], V=2, truncate=TRUE)
+## calculate GoF for null and other model
+(gof0 <- goodness(mod0))
+(gof <- goodness(mod))
+## better model is closer to the 1:1 line
+plot(gof0, type="b", col=2)
+points(gof, type="b", col=4)
+abline(0, 1, lty=2)
+## better model will give smaller absolute deviation
+sum(abs(apply(gof0, 1, diff)))
+sum(abs(apply(gof, 1, diff)))
+```
