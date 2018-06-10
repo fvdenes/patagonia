@@ -486,6 +486,25 @@ the count (Poisson) component, and compare models with and without
 season (breeding/non-breeding) as a covariate for the V-inflation
 probability.
 
+Model goodness-of-fit can be evaluated visually, inspecting the
+proportions of fitted values against the count distribution. Deviation
+from the 1:1 line can be used as a goodness-of-fit metric, with the
+better model showing smaller deviation.
+
+\begin{figure}[H]
+\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-16-1} \caption{\textit{Enicognathus ferrugineus} group size model goodness-of-fit (red: null model; blue: habitat.season model). Better model is closer to 1:1 line.}\label{fig:unnamed-chunk-16}
+\end{figure}
+
+The deviation of null model is 1.38, and of the VIP.habitat.season model
+is 0.74.
+
+Estimated model coefficients (Table 13) indicate that group sizes are
+larger in urban (\(\beta\) = 1.739) and agropastoral (\(\beta\) = 1.739)
+habitats when compared to other natural habitats. Moreover, the
+probability of there being extra pairs (i.e.~the V-inflation
+probability, \(\phi\)) is smaller in the non-breeding season (\(\beta\)
+= 1.739).
+
 \begin{longtable}[]{@{}lrrrr@{}}
 \caption{\textit{E. ferrugineous} group size model
 estimates}\tabularnewline
@@ -499,22 +518,15 @@ Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
 Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
 \midrule
 \endhead
-P\_(Intercept) & 1.000 & 0.019 & 52.686 & 0.000\tabularnewline
-P\_Urban & 1.754 & 0.023 & 76.483 & 0.000\tabularnewline
-P\_Agropastoral & 0.612 & 0.037 & 16.744 & 0.000\tabularnewline
-V\_(Intercept) & 1.316 & 0.816 & 1.612 & 0.107\tabularnewline
-V\_seasonnon-breeding & -3.474 & 0.839 & -4.142 & 0.000\tabularnewline
+par1 & 1.007 & 0.019 & 53.262 & 0.000\tabularnewline
+par2 & 1.739 & 0.023 & 75.931 & 0.000\tabularnewline
+par3 & 0.614 & 0.036 & 16.880 & 0.000\tabularnewline
+par4 & 0.223 & 0.671 & 0.333 & 0.740\tabularnewline
+par5 & -2.326 & 0.697 & -3.337 & 0.001\tabularnewline
 \bottomrule
 \end{longtable}
 
-Estimated model coefficients (Table 13) indicate that group sizes are
-larger in urban (\(\beta\) = 1.754) and agropastoral (\(\beta\) = 1.754)
-habitats when compared to other natural habitats. Moreover, the
-probability of there being extra pairs (i.e.~the V-inflation
-probability, \(\phi\)) is smaller in the non-breeding season (\(\beta\)
-= 1.754).
-
-Considence intervals (CI) based on estimated standard errors can be
+Confidence intervals (CI) based on estimated standard errors can be
 obtained (Table 14):
 
 \begin{longtable}[]{@{}lrr@{}}
@@ -527,21 +539,21 @@ obtained (Table 14):
 & 2.5\% & 97.5\%\tabularnewline
 \midrule
 \endhead
-P\_(Intercept) & 0.963 & 1.037\tabularnewline
-P\_Urban & 1.709 & 1.799\tabularnewline
-P\_Agropastoral & 0.540 & 0.683\tabularnewline
-V\_(Intercept) & -0.284 & 2.915\tabularnewline
-V\_seasonnon-breeding & -5.118 & -1.830\tabularnewline
+par1 & 0.970 & 1.044\tabularnewline
+par2 & 1.695 & 1.784\tabularnewline
+par3 & 0.543 & 0.685\tabularnewline
+par4 & -1.092 & 1.538\tabularnewline
+par5 & -3.691 & -0.960\tabularnewline
 \bottomrule
 \end{longtable}
 
 Alternatively, we can estimate confidence intervals based on quantiles
-using bootstrap samples (with n=250) for the estimated coefficients
+using bootstrap samples (with n=10) for the estimated coefficients
 (Table 15).
 
 \begin{longtable}[]{@{}lrrr@{}}
 \caption{Estimated coefficients and 95\% CI based on bootstrap sample
-(n= 250) quantiles for \textit{E. ferrugineous} group size
+(n= 10) quantiles for \textit{E. ferrugineous} group size
 models}\tabularnewline
 \toprule
 & Estimate & 2.5\% & 97.5\%\tabularnewline
@@ -551,11 +563,11 @@ models}\tabularnewline
 & Estimate & 2.5\% & 97.5\%\tabularnewline
 \midrule
 \endhead
-P\_(Intercept) & 1.000 & -20.137 & 28.356\tabularnewline
-P\_Urban & 1.754 & -19.089 & 23.699\tabularnewline
-P\_Agropastoral & 0.612 & -18.971 & 23.497\tabularnewline
-V\_(Intercept) & 1.316 & -19.202 & 21.600\tabularnewline
-V\_seasonnon-breeding & -3.474 & -20.430 & 20.669\tabularnewline
+par1 & 1.007 & 0.694 & 0.929\tabularnewline
+par2 & 1.739 & 1.842 & 2.150\tabularnewline
+par3 & 0.614 & 0.565 & 0.602\tabularnewline
+par4 & 0.223 & 0.340 & 0.691\tabularnewline
+par5 & -2.326 & -2.850 & -2.457\tabularnewline
 \bottomrule
 \end{longtable}
 
@@ -565,7 +577,7 @@ V\_seasonnon-breeding & -3.474 & -20.430 & 20.669\tabularnewline
 leptorhynchus}}{Slender-billed parakeet Enicognathus leptorhynchus}}\label{slender-billed-parakeet-enicognathus-leptorhynchus}
 
 \begin{figure}[H]
-\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-18-1} \caption{\textit{Enicognathus leptorhynchus} count frequencies}\label{fig:unnamed-chunk-18}
+\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-20-1} \caption{\textit{Enicognathus leptorhynchus} count frequencies}\label{fig:unnamed-chunk-20}
 \end{figure}
 
 \subsection{Estimating effective detection radius
@@ -649,7 +661,7 @@ A\textsubscript{i} is calculated using the habitat-specific estimated
 EDR, and is added to the model as an offset.
 
 \begin{figure}[H]
-\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-22-1} \caption{\textit{Enicognathus leptorhynchus} group numbers }\label{fig:unnamed-chunk-22}
+\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-24-1} \caption{\textit{Enicognathus leptorhynchus} group numbers }\label{fig:unnamed-chunk-24}
 \end{figure}
 
 \subsubsection{Model selection}\label{model-selection-1}
@@ -846,17 +858,17 @@ Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
 Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
 \midrule
 \endhead
-P\_(Intercept) & 9.348 & NA & NA & NA\tabularnewline
-P\_Urban & 4.168 & NA & NA & NA\tabularnewline
-P\_Agropastoral & -7.553 & NA & NA & NA\tabularnewline
-V\_(Intercept) & -0.008 & NA & NA & NA\tabularnewline
-V\_seasonnon-breeding & -10.208 & NA & NA & NA\tabularnewline
+P\_(Intercept) & -8.066 & NA & NA & NA\tabularnewline
+P\_Urban & 8.809 & NA & NA & NA\tabularnewline
+P\_Agropastoral & 31.024 & NA & NA & NA\tabularnewline
+V\_(Intercept) & 22.401 & NA & NA & NA\tabularnewline
+V\_seasonnon-breeding & -17.695 & NA & NA & NA\tabularnewline
 \bottomrule
 \end{longtable}
 
 Model-fitting function cannot estimate coefficient standard errors due
 to sigular Hessian matrix (Table 25). We can calculate confidence
-intervals based on quantiles using bootstrap (with n=250):
+intervals based on quantiles using bootstrap (with n=10):
 
 \begin{longtable}[]{@{}lrrr@{}}
 \caption{Estimated coefficients and 95\% CI based on bootstrap quantiles
@@ -869,11 +881,11 @@ for \textit{E. leptorhynchus} group size models}\tabularnewline
 & Estimate & 2.5\% & 97.5\%\tabularnewline
 \midrule
 \endhead
-P\_(Intercept) & 9.348 & -20.918 & 30.698\tabularnewline
-P\_Urban & 4.168 & -26.730 & 26.184\tabularnewline
-P\_Agropastoral & -7.553 & -25.738 & 25.361\tabularnewline
-V\_(Intercept) & -0.008 & -24.252 & 25.802\tabularnewline
-V\_seasonnon-breeding & -10.208 & -25.553 & 27.833\tabularnewline
+P\_(Intercept) & -8.066 & -24.134 & 14.816\tabularnewline
+P\_Urban & 8.809 & -32.641 & 11.122\tabularnewline
+P\_Agropastoral & 31.024 & -23.261 & 26.760\tabularnewline
+V\_(Intercept) & 22.401 & -19.278 & 19.140\tabularnewline
+V\_seasonnon-breeding & -17.695 & -28.163 & 11.926\tabularnewline
 \bottomrule
 \end{longtable}
 
@@ -886,6 +898,8 @@ simulations}\label{vip-model---r-functions-and-simulations}
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(DEoptim)}
+\KeywordTok{library}\NormalTok{(Matrix)}
 \NormalTok{vip <-}
 \ControlFlowTok{function}\NormalTok{(Y, X, Z, }\DataTypeTok{V=}\DecValTok{0}\NormalTok{,}
 \NormalTok{offsetx, offsetz, weights, }\DataTypeTok{linkz=}\StringTok{"logit"}\NormalTok{,}
@@ -939,20 +953,48 @@ simulations}\label{vip-model---r-functions-and-simulations}
 \NormalTok{            loglik <-}\StringTok{ }\OperatorTok{-}\NormalTok{good.num.limit[}\DecValTok{2}\NormalTok{]}
         \OperatorTok{-}\NormalTok{loglik}
 \NormalTok{    \}}
-
+\NormalTok{    .solvenear <-}
+\StringTok{    }\ControlFlowTok{function}\NormalTok{(x)}
+\NormalTok{    \{}
+\NormalTok{        xinv <-}\StringTok{ }\KeywordTok{try}\NormalTok{(}\KeywordTok{solve}\NormalTok{(x), }\DataTypeTok{silent =} \OtherTok{TRUE}\NormalTok{)}
+        \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{inherits}\NormalTok{(xinv, }\StringTok{"try-error"}\NormalTok{))}
+\NormalTok{            xinv <-}\StringTok{ }\KeywordTok{as.matrix}\NormalTok{(}\KeywordTok{solve}\NormalTok{(Matrix}\OperatorTok{::}\KeywordTok{nearPD}\NormalTok{(x)}\OperatorTok{$}\NormalTok{mat))}
+\NormalTok{        xinv}
+\NormalTok{    \}}
     \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is.null}\NormalTok{(init))}
-\NormalTok{      init <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\DecValTok{0}\NormalTok{, kx}\OperatorTok{+}\NormalTok{kz)}
-\NormalTok{    opt <-}\StringTok{ }\KeywordTok{optim}\NormalTok{(init, }
-        \ControlFlowTok{if}\NormalTok{ (truncate) nll_VIP_TR }\ControlFlowTok{else}\NormalTok{ nll_VIP_ML, }
-        \DataTypeTok{hessian=}\NormalTok{hessian, }\DataTypeTok{method=}\NormalTok{method, ...)}
-\NormalTok{    par <-}\StringTok{ }\NormalTok{opt}\OperatorTok{$}\NormalTok{par}
-    \KeywordTok{names}\NormalTok{(par) <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\KeywordTok{paste0}\NormalTok{(}\StringTok{"P_"}\NormalTok{, }\KeywordTok{colnames}\NormalTok{(X)), }\KeywordTok{paste0}\NormalTok{(}\StringTok{"V_"}\NormalTok{, }\KeywordTok{colnames}\NormalTok{(Z)))}
-\NormalTok{    vc <-}\StringTok{ }\ControlFlowTok{if}\NormalTok{ (hessian)}
-        \KeywordTok{solve}\NormalTok{(opt}\OperatorTok{$}\NormalTok{hessian) }\ControlFlowTok{else} \KeywordTok{matrix}\NormalTok{(}\OtherTok{NA}\NormalTok{, }\KeywordTok{length}\NormalTok{(par), }\KeywordTok{length}\NormalTok{(par))}
+\NormalTok{        init <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\DecValTok{0}\NormalTok{, kx}\OperatorTok{+}\NormalTok{kz)}
+\NormalTok{    nll <-}\StringTok{ }\ControlFlowTok{if}\NormalTok{ (truncate) nll_VIP_TR }\ControlFlowTok{else}\NormalTok{ nll_VIP_ML}
+
+    \ControlFlowTok{if}\NormalTok{ (method }\OperatorTok{==}\StringTok{ "DE"}\NormalTok{) \{}
+\NormalTok{        DElimit <-}\StringTok{ }\DecValTok{10}
+\NormalTok{        up <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(DElimit, }\KeywordTok{length}\NormalTok{(init))}
+\NormalTok{        lo <-}\StringTok{ }\OperatorTok{-}\NormalTok{up}
+\NormalTok{        opt <-}\StringTok{ }\KeywordTok{DEoptim}\NormalTok{(}\DataTypeTok{fn=}\NormalTok{nll, }\DataTypeTok{lower=}\NormalTok{lo, }\DataTypeTok{upper=}\NormalTok{up,}
+            \DataTypeTok{control=}\KeywordTok{list}\NormalTok{(}\DataTypeTok{trace=}\OtherTok{FALSE}\NormalTok{, }\DataTypeTok{itermax=}\KeywordTok{length}\NormalTok{(init)}\OperatorTok{*}\DecValTok{200}\NormalTok{))}
+\NormalTok{        par <-}\StringTok{ }\NormalTok{opt}\OperatorTok{$}\NormalTok{optim}\OperatorTok{$}\NormalTok{bestmem}
+        \KeywordTok{names}\NormalTok{(par) <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\KeywordTok{paste0}\NormalTok{(}\StringTok{"P_"}\NormalTok{, }\KeywordTok{colnames}\NormalTok{(X)), }\KeywordTok{paste0}\NormalTok{(}\StringTok{"V_"}\NormalTok{, }\KeywordTok{colnames}\NormalTok{(Z)))}
+\NormalTok{        ll <-}\StringTok{ }\OperatorTok{-}\NormalTok{opt}\OperatorTok{$}\NormalTok{optim}\OperatorTok{$}\NormalTok{bestval}
+        \ControlFlowTok{if}\NormalTok{ (hessian) \{}
+\NormalTok{            hess <-}\StringTok{ }\KeywordTok{optimHess}\NormalTok{(opt}\OperatorTok{$}\NormalTok{optim}\OperatorTok{$}\NormalTok{bestmem, nll)}
+\NormalTok{            vc <-}\StringTok{ }\KeywordTok{.solvenear}\NormalTok{(hess)}
+\NormalTok{        \} }\ControlFlowTok{else}\NormalTok{ \{}
+            \KeywordTok{matrix}\NormalTok{(}\OtherTok{NA}\NormalTok{, }\KeywordTok{length}\NormalTok{(par), }\KeywordTok{length}\NormalTok{(par))}
+\NormalTok{        \}}
+\NormalTok{    \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{        opt <-}\StringTok{ }\KeywordTok{optim}\NormalTok{(init, nll,}
+            \DataTypeTok{hessian=}\NormalTok{hessian, }\DataTypeTok{method=}\NormalTok{method, ...)}
+\NormalTok{        par <-}\StringTok{ }\NormalTok{opt}\OperatorTok{$}\NormalTok{par}
+        \KeywordTok{names}\NormalTok{(par) <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\KeywordTok{paste0}\NormalTok{(}\StringTok{"P_"}\NormalTok{, }\KeywordTok{colnames}\NormalTok{(X)), }\KeywordTok{paste0}\NormalTok{(}\StringTok{"V_"}\NormalTok{, }\KeywordTok{colnames}\NormalTok{(Z)))}
+\NormalTok{        vc <-}\StringTok{ }\ControlFlowTok{if}\NormalTok{ (hessian)}
+            \KeywordTok{.solvenear}\NormalTok{(opt}\OperatorTok{$}\NormalTok{hessian) }\ControlFlowTok{else} \KeywordTok{matrix}\NormalTok{(}\OtherTok{NA}\NormalTok{, }\KeywordTok{length}\NormalTok{(par), }\KeywordTok{length}\NormalTok{(par))}
+\NormalTok{        ll <-}\StringTok{ }\OperatorTok{-}\NormalTok{opt}\OperatorTok{$}\NormalTok{value}
+\NormalTok{    \}}
     \KeywordTok{dimnames}\NormalTok{(vc) <-}\StringTok{ }\KeywordTok{list}\NormalTok{(}\KeywordTok{names}\NormalTok{(par), }\KeywordTok{names}\NormalTok{(par))}
 \NormalTok{    out <-}\StringTok{ }\KeywordTok{list}\NormalTok{(}\DataTypeTok{call=}\KeywordTok{match.call}\NormalTok{(),}
-        \DataTypeTok{coefficients=}\NormalTok{par, }\DataTypeTok{loglik=}\OperatorTok{-}\NormalTok{opt}\OperatorTok{$}\NormalTok{value, }\DataTypeTok{vcov=}\NormalTok{vc, }\DataTypeTok{nobs=}\NormalTok{n,}
-        \DataTypeTok{truncate=}\NormalTok{truncate)}
+        \DataTypeTok{coefficients=}\NormalTok{par, }\DataTypeTok{loglik=}\NormalTok{ll, }\DataTypeTok{vcov=}\NormalTok{vc, }\DataTypeTok{nobs=}\NormalTok{n,}
+        \DataTypeTok{truncate=}\NormalTok{truncate, }\DataTypeTok{Y=}\NormalTok{Y, }\DataTypeTok{X=}\NormalTok{X, }\DataTypeTok{Z=}\NormalTok{Z, }\DataTypeTok{V=}\NormalTok{V,}
+        \DataTypeTok{offsetx=}\NormalTok{offsetx, }\DataTypeTok{offsetz=}\NormalTok{offsetz, }\DataTypeTok{weights=}\NormalTok{weights, }
+        \DataTypeTok{linkz=}\NormalTok{linkz, }\DataTypeTok{method=}\NormalTok{method, }\DataTypeTok{init=}\NormalTok{init)}
     \KeywordTok{class}\NormalTok{(out) <-}\StringTok{ "vip"}
 \NormalTok{    out}
 \NormalTok{\}}
@@ -1090,7 +1132,7 @@ part}\label{covariates-for-the-non-v-part}
 \begin{Shaded}
 \begin{Highlighting}[]
 \KeywordTok{set.seed}\NormalTok{(}\DecValTok{123}\NormalTok{)}
-\NormalTok{n <-}\StringTok{ }\DecValTok{10000}
+\NormalTok{n <-}\StringTok{ }\DecValTok{1000}
 \NormalTok{x <-}\StringTok{ }\KeywordTok{rnorm}\NormalTok{(n)}
 \NormalTok{df <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{x=}\NormalTok{x)}
 \NormalTok{X <-}\StringTok{ }\KeywordTok{model.matrix}\NormalTok{(}\OperatorTok{~}\NormalTok{x, df)}
@@ -1107,16 +1149,14 @@ part}\label{covariates-for-the-non-v-part}
 
 \begin{verbatim}
 ##        Vinflated
-## Poisson    0    1    2    3    4    5    6    7    8
-##       0 3182    0 2131    0    0    0    0    0    0
-##       1    0 1981 1137    0    0    0    0    0    0
-##       2    0    0 1088    0    0    0    0    0    0
-##       3    0    0  118  226    0    0    0    0    0
-##       4    0    0   40    0   57    0    0    0    0
-##       5    0    0   14    0    0   17    0    0    0
-##       6    0    0    1    0    0    0    3    0    0
-##       7    0    0    2    0    0    0    0    1    0
-##       8    0    0    1    0    0    0    0    0    1
+## Poisson   0   1   2   3   4   5   6
+##       0 299   0 228   0   0   0   0
+##       1   0 201 131   0   0   0   0
+##       2   0   0  95   0   0   0   0
+##       3   0   0  14  18   0   0   0
+##       4   0   0   2   0   6   0   0
+##       5   0   0   0   0   0   4   0
+##       6   0   0   0   0   0   0   2
 \end{verbatim}
 
 \begin{Shaded}
@@ -1135,14 +1175,14 @@ part}\label{covariates-for-the-non-v-part}
 ## 
 ## Coefficients:
 ##               Estimate Std. Error z value Pr(>|z|)    
-## P_(Intercept) -0.45313    0.02037  -22.24   <2e-16 ***
-## P_x           -0.49231    0.01664  -29.58   <2e-16 ***
-## V_(Intercept) -0.48770    0.02483  -19.64   <2e-16 ***
+## P_(Intercept) -0.39671    0.06382  -6.216 5.11e-10 ***
+## P_x           -0.49031    0.05331  -9.198  < 2e-16 ***
+## V_(Intercept) -0.42040    0.07813  -5.381 7.42e-08 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
 ## 
-## Log-likelihood: -1.133e+04 
-## BIC = 1.147e+05
+## Log-likelihood: -1141 
+## BIC =  9169
 \end{verbatim}
 
 \begin{Shaded}
@@ -1154,9 +1194,9 @@ part}\label{covariates-for-the-non-v-part}
 
 \begin{verbatim}
 ##                 True        Est
-## beta1     -0.5000000 -0.4531273
-## beta2     -0.5000000 -0.4923100
-## logit_phi -0.4054651 -0.4876957
+## beta1     -0.5000000 -0.3967122
+## beta2     -0.5000000 -0.4903124
+## logit_phi -0.4054651 -0.4203965
 \end{verbatim}
 
 \subsection{Methods}\label{methods}
@@ -1169,7 +1209,7 @@ part}\label{covariates-for-the-non-v-part}
 
 \begin{verbatim}
 ## P_(Intercept)           P_x V_(Intercept) 
-##    -0.4531273    -0.4923100    -0.4876957
+##    -0.3967122    -0.4903124    -0.4203965
 \end{verbatim}
 
 \begin{Shaded}
@@ -1180,9 +1220,9 @@ part}\label{covariates-for-the-non-v-part}
 
 \begin{verbatim}
 ##               P_(Intercept)           P_x V_(Intercept)
-## P_(Intercept)  0.0004151059  1.815322e-04 -1.454395e-04
-## P_x            0.0001815322  2.769780e-04 -5.339019e-05
-## V_(Intercept) -0.0001454395 -5.339019e-05  6.165031e-04
+## P_(Intercept)   0.004073534  0.0018566813 -0.0014632502
+## P_x             0.001856681  0.0028417922 -0.0006105607
+## V_(Intercept)  -0.001463250 -0.0006105607  0.0061042545
 \end{verbatim}
 
 \begin{Shaded}
@@ -1200,14 +1240,14 @@ part}\label{covariates-for-the-non-v-part}
 ## 
 ## Coefficients:
 ##               Estimate Std. Error z value Pr(>|z|)    
-## P_(Intercept) -0.45313    0.02037  -22.24   <2e-16 ***
-## P_x           -0.49231    0.01664  -29.58   <2e-16 ***
-## V_(Intercept) -0.48770    0.02483  -19.64   <2e-16 ***
+## P_(Intercept) -0.39671    0.06382  -6.216 5.11e-10 ***
+## P_x           -0.49031    0.05331  -9.198  < 2e-16 ***
+## V_(Intercept) -0.42040    0.07813  -5.381 7.42e-08 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
 ## 
-## Log-likelihood: -1.133e+04 
-## BIC = 1.147e+05
+## Log-likelihood: -1141 
+## BIC =  9169
 \end{verbatim}
 
 \begin{Shaded}
@@ -1218,9 +1258,9 @@ part}\label{covariates-for-the-non-v-part}
 
 \begin{verbatim}
 ##                     2.5%      97.5%
-## P_(Intercept) -0.4930599 -0.4131947
-## P_x           -0.5249290 -0.4596910
-## V_(Intercept) -0.5363606 -0.4390308
+## P_(Intercept) -0.5218054 -0.2716189
+## P_x           -0.5947950 -0.3858297
+## V_(Intercept) -0.5735279 -0.2672650
 \end{verbatim}
 
 \begin{Shaded}
@@ -1230,7 +1270,7 @@ part}\label{covariates-for-the-non-v-part}
 \end{Shaded}
 
 \begin{verbatim}
-## [1] 10000
+## [1] 1000
 \end{verbatim}
 
 \begin{Shaded}
@@ -1240,7 +1280,7 @@ part}\label{covariates-for-the-non-v-part}
 \end{Shaded}
 
 \begin{verbatim}
-## 'log Lik.' -11332.89 (df=9997)
+## 'log Lik.' -1140.751 (df=997)
 \end{verbatim}
 
 \begin{Shaded}
@@ -1250,7 +1290,7 @@ part}\label{covariates-for-the-non-v-part}
 \end{Shaded}
 
 \begin{verbatim}
-## [1] 42659.77
+## [1] 4275.502
 \end{verbatim}
 
 \begin{Shaded}
@@ -1260,10 +1300,10 @@ part}\label{covariates-for-the-non-v-part}
 \end{Shaded}
 
 \begin{verbatim}
-## [1] 114741.5
+## [1] 9168.534
 \end{verbatim}
 
-\subsection{Zero-truncated VIP}\label{zero-truncated-vip}
+\section{Zero-truncated VIP}\label{zero-truncated-vip}
 
 We can truncate counts to be larger than 0. We also need \(V>0\) (for
 \(V=0\) case, look into ZIP or conditional Poisson model). Conceptually,
@@ -1355,6 +1395,119 @@ Here we use covariates for both the V and non-V part.
 ## beta2  -0.5 -0.57343540
 ## alpha1  0.0  0.02131236
 ## alpha2  0.5  0.47040670
+\end{verbatim}
+
+\section{Goodness of fit}\label{goodness-of-fit}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{goodness <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(object, }\DataTypeTok{maxcount=}\OtherTok{NULL}\NormalTok{) \{}
+    \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is.null}\NormalTok{(maxcount))}
+\NormalTok{        maxcount <-}\StringTok{ }\KeywordTok{max}\NormalTok{(object}\OperatorTok{$}\NormalTok{Y)}
+\NormalTok{    COUNTS <-}\StringTok{ }\ControlFlowTok{if}\NormalTok{ (object}\OperatorTok{$}\NormalTok{truncate)}
+\NormalTok{        1L}\OperatorTok{:}\KeywordTok{max}\NormalTok{(object}\OperatorTok{$}\NormalTok{Y) }\ControlFlowTok{else}\NormalTok{ 0L}\OperatorTok{:}\NormalTok{maxcount}
+    
+\NormalTok{    P_obs <-}\StringTok{ }\KeywordTok{table}\NormalTok{(object}\OperatorTok{$}\NormalTok{Y) }\OperatorTok{/}\StringTok{ }\KeywordTok{nobs}\NormalTok{(object)}
+\NormalTok{    P_obs <-}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(P_obs[}\KeywordTok{match}\NormalTok{(COUNTS, }\KeywordTok{names}\NormalTok{(P_obs))])}
+\NormalTok{    P_obs[}\KeywordTok{is.na}\NormalTok{(P_obs)] <-}\StringTok{ }\DecValTok{0}
+    \KeywordTok{names}\NormalTok{(P_obs) <-}\StringTok{ }\NormalTok{COUNTS}
+    
+\NormalTok{    P_exp <-}\StringTok{ }\NormalTok{P_obs}
+\NormalTok{    P_exp[] <-}\StringTok{ }\DecValTok{0}
+    
+\NormalTok{    linkinvx <-}\StringTok{ }\KeywordTok{poisson}\NormalTok{(}\StringTok{"log"}\NormalTok{)}\OperatorTok{$}\NormalTok{linkinv}
+\NormalTok{    linkinvz <-}\StringTok{ }\KeywordTok{binomial}\NormalTok{(object}\OperatorTok{$}\NormalTok{linkz)}\OperatorTok{$}\NormalTok{linkinv}
+\NormalTok{    parms <-}\StringTok{ }\KeywordTok{coef}\NormalTok{(object)}
+\NormalTok{    kx <-}\StringTok{ }\KeywordTok{ncol}\NormalTok{(object}\OperatorTok{$}\NormalTok{X)}
+\NormalTok{    kz <-}\StringTok{ }\KeywordTok{ncol}\NormalTok{(object}\OperatorTok{$}\NormalTok{Z)}
+\NormalTok{    mu <-}\StringTok{ }\KeywordTok{as.vector}\NormalTok{(}\KeywordTok{linkinvx}\NormalTok{(object}\OperatorTok{$}\NormalTok{X }\OperatorTok{%*%}\StringTok{ }\NormalTok{parms[}\DecValTok{1}\OperatorTok{:}\NormalTok{kx] }\OperatorTok{+}\StringTok{ }\NormalTok{object}\OperatorTok{$}\NormalTok{offsetx))}
+\NormalTok{    phi <-}\StringTok{ }\KeywordTok{as.vector}\NormalTok{(}\KeywordTok{linkinvz}\NormalTok{(object}\OperatorTok{$}\NormalTok{Z }\OperatorTok{%*%}\StringTok{ }\NormalTok{parms[(kx }\OperatorTok{+}\StringTok{ }\DecValTok{1}\NormalTok{)}\OperatorTok{:}\NormalTok{(kx }\OperatorTok{+}\StringTok{ }\NormalTok{kz)] }\OperatorTok{+}\StringTok{ }\NormalTok{object}\OperatorTok{$}\NormalTok{offsetz))}
+    \CommentTok{#id0 <- object$Y == object$V}
+\NormalTok{    Pmat <-}\StringTok{ }\KeywordTok{matrix}\NormalTok{(}\DecValTok{0}\NormalTok{, }\KeywordTok{nobs}\NormalTok{(object), }\KeywordTok{length}\NormalTok{(COUNTS))}
+    \KeywordTok{colnames}\NormalTok{(Pmat) <-}\StringTok{ }\NormalTok{COUNTS}
+    
+\NormalTok{    PV <-}\StringTok{ }\ControlFlowTok{if}\NormalTok{ (object}\OperatorTok{$}\NormalTok{truncate) \{}
+        \KeywordTok{log}\NormalTok{(phi }\OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{phi) }\OperatorTok{*}\StringTok{ }\KeywordTok{dpois}\NormalTok{(object}\OperatorTok{$}\NormalTok{V, }
+            \DataTypeTok{lambda =}\NormalTok{ mu, }\DataTypeTok{log =} \OtherTok{FALSE}\NormalTok{) }\OperatorTok{/}\StringTok{ }\NormalTok{(}\DecValTok{1}\OperatorTok{-}\KeywordTok{exp}\NormalTok{(}\OperatorTok{-}\NormalTok{mu)))}
+\NormalTok{    \} }\ControlFlowTok{else}\NormalTok{ \{}
+        \KeywordTok{log}\NormalTok{(phi }\OperatorTok{+}\StringTok{ }\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{phi) }\OperatorTok{*}\StringTok{ }\KeywordTok{dpois}\NormalTok{(object}\OperatorTok{$}\NormalTok{V, }\DataTypeTok{lambda =}\NormalTok{ mu, }\DataTypeTok{log =} \OtherTok{FALSE}\NormalTok{))}
+\NormalTok{    \}}
+    \ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in}\NormalTok{ COUNTS) \{}
+\NormalTok{        PC <-}\StringTok{ }\ControlFlowTok{if}\NormalTok{ (object}\OperatorTok{$}\NormalTok{truncate) \{}
+            \KeywordTok{log}\NormalTok{((}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{phi) }\OperatorTok{*}\StringTok{ }\KeywordTok{dpois}\NormalTok{(i, }\DataTypeTok{lambda =}\NormalTok{ mu, }\DataTypeTok{log =} \OtherTok{FALSE}\NormalTok{) }\OperatorTok{/}\StringTok{ }\NormalTok{(}\DecValTok{1}\OperatorTok{-}\KeywordTok{exp}\NormalTok{(}\OperatorTok{-}\NormalTok{mu)))}
+\NormalTok{        \} }\ControlFlowTok{else}\NormalTok{ \{}
+            \KeywordTok{log}\NormalTok{(}\DecValTok{1} \OperatorTok{-}\StringTok{ }\NormalTok{phi) }\OperatorTok{+}\StringTok{ }\KeywordTok{dpois}\NormalTok{(i, }\DataTypeTok{lambda =}\NormalTok{ mu, }\DataTypeTok{log =} \OtherTok{TRUE}\NormalTok{)}
+\NormalTok{        \}}
+\NormalTok{        Pmat[,}\KeywordTok{as.character}\NormalTok{(i)] <-}\StringTok{ }\ControlFlowTok{if}\NormalTok{ (i }\OperatorTok{==}\StringTok{ }\NormalTok{object}\OperatorTok{$}\NormalTok{V)}
+            \KeywordTok{exp}\NormalTok{(PV) }\ControlFlowTok{else} \KeywordTok{exp}\NormalTok{(PC)}
+\NormalTok{    \}}
+\NormalTok{    P_exp <-}\StringTok{ }\KeywordTok{colMeans}\NormalTok{(Pmat)}
+    \KeywordTok{cbind}\NormalTok{(}\DataTypeTok{P_obs=}\NormalTok{P_obs, }\DataTypeTok{P_exp=}\NormalTok{P_exp)}
+\NormalTok{\}}
+
+\NormalTok{## fit null model}
+\NormalTok{mod0 <-}\StringTok{ }\KeywordTok{vip}\NormalTok{(}\DataTypeTok{Y=}\NormalTok{y, }\DataTypeTok{X=}\NormalTok{X[,}\DecValTok{1}\NormalTok{,}\DataTypeTok{drop=}\OtherTok{FALSE}\NormalTok{], }\DataTypeTok{Z=}\NormalTok{Z[,}\DecValTok{1}\NormalTok{,}\DataTypeTok{drop=}\OtherTok{FALSE}\NormalTok{], }\DataTypeTok{V=}\DecValTok{2}\NormalTok{, }\DataTypeTok{truncate=}\OtherTok{TRUE}\NormalTok{)}
+\NormalTok{## calculate GoF for null and other model}
+\NormalTok{(gof0 <-}\StringTok{ }\KeywordTok{goodness}\NormalTok{(mod0))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##         P_obs        P_exp
+## 1 0.327004219 0.3234032597
+## 2 0.622362869 0.6223385125
+## 3 0.033755274 0.0427550867
+## 4 0.014767932 0.0095197408
+## 5 0.000000000 0.0016957134
+## 6 0.002109705 0.0002517089
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{(gof <-}\StringTok{ }\KeywordTok{goodness}\NormalTok{(mod))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##         P_obs       P_exp
+## 1 0.327004219 0.325425662
+## 2 0.622362869 0.619861184
+## 3 0.033755274 0.037772839
+## 4 0.014767932 0.011711772
+## 5 0.000000000 0.003622341
+## 6 0.002109705 0.001119974
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{## better model is closer to the 1:1 line}
+\KeywordTok{plot}\NormalTok{(gof0, }\DataTypeTok{type=}\StringTok{"b"}\NormalTok{, }\DataTypeTok{col=}\DecValTok{2}\NormalTok{)}
+\KeywordTok{points}\NormalTok{(gof, }\DataTypeTok{type=}\StringTok{"b"}\NormalTok{, }\DataTypeTok{col=}\DecValTok{4}\NormalTok{)}
+\KeywordTok{abline}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DataTypeTok{lty=}\DecValTok{2}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-38-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{## better model will give smaller absolute deviation}
+\KeywordTok{sum}\NormalTok{(}\KeywordTok{abs}\NormalTok{(}\KeywordTok{apply}\NormalTok{(gof0, }\DecValTok{1}\NormalTok{, diff)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.02142703
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{sum}\NormalTok{(}\KeywordTok{abs}\NormalTok{(}\KeywordTok{apply}\NormalTok{(gof, }\DecValTok{1}\NormalTok{, diff)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.01576604
 \end{verbatim}
 
 
