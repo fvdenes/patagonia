@@ -984,7 +984,7 @@ mu_phi_fun<-function(object){
   newX <- model.matrix(~1,sites) # get predictor values from the 'sites' dataframe, that includes all sites surveyed (object sites)
   newZ <- model.matrix(~1, sites) # same as above for season
   
-  newoffsetx <- 0 # sames as above for the surveyed area (A) - NOT SURE IF THIS SHOULD BE 0 INSTEAD
+  newoffsetx <- 0 # The null model (mod0) does not have an offset. Not sure if this is correct though.
   
   
   linkinvx <- poisson("log")$linkinv
