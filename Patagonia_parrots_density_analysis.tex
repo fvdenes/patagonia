@@ -25,7 +25,7 @@
 \usepackage{hyperref}
 \hypersetup{unicode=true,
             pdftitle={Patagonia parrots density analysis},
-            pdfauthor={Francisco Dénes and Peter Sólymos},
+            pdfauthor={Francisco Denes and Peter Solymos},
             pdfborder={0 0 0},
             breaklinks=true}
 \urlstyle{same}  % don't use monospace font for urls
@@ -117,7 +117,7 @@
   \title{Patagonia parrots density analysis}
   \pretitle{\vspace{\droptitle}\centering\huge}
   \posttitle{\par}
-  \author{Francisco Dénes and Peter Sólymos}
+  \author{Francisco Denes and Peter Solymos}
   \preauthor{\centering\large\emph}
   \postauthor{\par}
   \predate{\centering\large\emph}
@@ -138,9 +138,8 @@ Patagonia. Because these parrots are gregarious, we want to assess
 whether group size and size of groups vary across habitats (classified
 as `urban', `agropastoral' and `other' (i.e.~various natural forest
 formations), and between breeding (Nov-Dec) and non-breeding seasons
-(Jan-Oct).\\
-We use distance sampling methods to account for detectability of
-parrots.
+(Jan-Oct). We use distance sampling methods to account for detectability
+of parrots.
 
 These animals tend to form smaller or larger groups, but groups of size
 2 are also often observed as a result of mating pairs, as shown in
@@ -187,7 +186,7 @@ indicating that habitat type affects the effective detection radius
 is higher in agropastoral than urban and other habitats (Table 2). This
 means that detectability is higher in agropastoral habitats, and also
 that the area surveyed in a given sample unit is larger if the habitat
-therein is agropastoral vs.~urban or other, presubably because it is
+therein is agropastoral vs.~urban or other, presumably because it is
 possible to see further in pastures and planted fields than in forest or
 urban environments.
 
@@ -235,7 +234,9 @@ model for number of groups is G\textsubscript{i} \textasciitilde{}
 Poisson(D\textsubscript{i}A\textsubscript{i}), where D\textsubscript{i}
 = covariates and A\textsubscript{i} = area sampled in site \emph{i}.
 A\textsubscript{i} is calculated using the habitat-specific estimated
-EDR, and is added to the model as an offset.
+EDR as \(A_i = L_i * (2EDR_i)\), where \(L\) is the length of each site
+(i.e.~the transect). A\textsubscript{i} is added to the model as an
+offset.
 
 \begin{figure}[H]
 \includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-6-1} \caption{\textit{Enicognathus ferrugineus} group numbers }\label{fig:unnamed-chunk-6}
@@ -309,7 +310,7 @@ I(elevation\^{}2) & 1 & 33.475 & 2896 & 1602.619\tabularnewline
 \end{longtable}
 
 We then proceed by adding within-year temporal covariates
-(breeding/non-breeding season and julian date) and their interactions
+(breeding/non-breeding season and Julian date) and their interactions
 with habitat.
 
 \begin{longtable}[]{@{}lrrr@{}}
@@ -332,7 +333,7 @@ ngroup.hab.jdate.ele2 & 6 & 2084.491 & 18.90\tabularnewline
 \end{longtable}
 
 The model with the season*habitat interaction (Table 8) is equally
-parcimonious with the model with only the additive effects (Table 9).
+parsimonious with the model with only the additive effects (Table 9).
 Given these are nested models, this indicates the interaction only
 marginally improves the model fit, so will continue with model with
 season and no interaction:
@@ -404,7 +405,7 @@ ngroup.hab.season.ele2 & 6 & 2067.555 & 45.29\tabularnewline
 \end{longtable}
 
 The model with lowest AIC indicates that the number of groups is
-affected by habitat ype, elevation, season (breeding/non breeding) and
+affected by habitat type, elevation, season (breeding/non breeding) and
 year.
 
 \begin{longtable}[]{@{}lrrrr@{}}
@@ -460,7 +461,7 @@ and by the absence of 0s due to group size being conditional on having
 \textgreater{}0 birds to consider it a group.
 
 We start developing a general V-Inflated Poisson (VIP) model (``V''
-stands for ``variable''``, in refence to the''Z" representing 0 in a
+stands for ``variable'', in reference to the ``Z'' representing 0 in a
 zero-inflated Poisson model, or ZIP), then we add the \textgreater{}0
 condition.
 
@@ -486,6 +487,8 @@ the count (Poisson) component, and compare models with and without
 season (breeding/non-breeding) as a covariate for the V-inflation
 probability.
 
+\subsubsection{Goodness-of-fit}\label{goodness-of-fit}
+
 Model goodness-of-fit can be evaluated visually, inspecting the
 proportions of fitted values against the count distribution. Deviation
 from the 1:1 line can be used as a goodness-of-fit metric, with the
@@ -498,12 +501,15 @@ better model showing smaller deviation.
 The deviation of null model is 1.38, and of the VIP.habitat.season model
 is 0.74.
 
+\subsubsection{Confidence intervals for model
+estimates}\label{confidence-intervals-for-model-estimates}
+
 Estimated model coefficients (Table 13) indicate that group sizes are
-larger in urban (\(\beta\) = 1.739) and agropastoral (\(\beta\) = 1.739)
+larger in urban (\(\beta\) = 1.739) and agropastoral (\(\beta\) = 0.614)
 habitats when compared to other natural habitats. Moreover, the
 probability of there being extra pairs (i.e.~the V-inflation
 probability, \(\phi\)) is smaller in the non-breeding season (\(\beta\)
-= 1.739).
+= -2.326).
 
 \begin{longtable}[]{@{}lrrrr@{}}
 \caption{\textit{E. ferrugineous} group size model
@@ -518,11 +524,11 @@ Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
 Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
 \midrule
 \endhead
-par1 & 1.007 & 0.019 & 53.262 & 0.000\tabularnewline
-par2 & 1.739 & 0.023 & 75.931 & 0.000\tabularnewline
-par3 & 0.614 & 0.036 & 16.880 & 0.000\tabularnewline
-par4 & 0.223 & 0.671 & 0.333 & 0.740\tabularnewline
-par5 & -2.326 & 0.697 & -3.337 & 0.001\tabularnewline
+P\_(Intercept) & 1.007 & 0.019 & 53.262 & 0.000\tabularnewline
+P\_Urban & 1.739 & 0.023 & 75.931 & 0.000\tabularnewline
+P\_Agropastoral & 0.614 & 0.036 & 16.880 & 0.000\tabularnewline
+V\_(Intercept) & 0.223 & 0.671 & 0.333 & 0.740\tabularnewline
+V\_seasonnon-breeding & -2.326 & 0.697 & -3.337 & 0.001\tabularnewline
 \bottomrule
 \end{longtable}
 
@@ -539,21 +545,21 @@ obtained (Table 14):
 & 2.5\% & 97.5\%\tabularnewline
 \midrule
 \endhead
-par1 & 0.970 & 1.044\tabularnewline
-par2 & 1.695 & 1.784\tabularnewline
-par3 & 0.543 & 0.685\tabularnewline
-par4 & -1.092 & 1.538\tabularnewline
-par5 & -3.691 & -0.960\tabularnewline
+P\_(Intercept) & 0.970 & 1.044\tabularnewline
+P\_Urban & 1.695 & 1.784\tabularnewline
+P\_Agropastoral & 0.543 & 0.685\tabularnewline
+V\_(Intercept) & -1.092 & 1.538\tabularnewline
+V\_seasonnon-breeding & -3.691 & -0.960\tabularnewline
 \bottomrule
 \end{longtable}
 
 Alternatively, we can estimate confidence intervals based on quantiles
-using bootstrap samples (with n=10) for the estimated coefficients
+using bootstrap samples (with n=250) for the estimated coefficients
 (Table 15).
 
 \begin{longtable}[]{@{}lrrr@{}}
 \caption{Estimated coefficients and 95\% CI based on bootstrap sample
-(n= 10) quantiles for \textit{E. ferrugineous} group size
+(n= 250) quantiles for \textit{E. ferrugineous} group size
 models}\tabularnewline
 \toprule
 & Estimate & 2.5\% & 97.5\%\tabularnewline
@@ -563,11 +569,61 @@ models}\tabularnewline
 & Estimate & 2.5\% & 97.5\%\tabularnewline
 \midrule
 \endhead
-par1 & 1.007 & 0.694 & 0.929\tabularnewline
-par2 & 1.739 & 1.842 & 2.150\tabularnewline
-par3 & 0.614 & 0.565 & 0.602\tabularnewline
-par4 & 0.223 & 0.340 & 0.691\tabularnewline
-par5 & -2.326 & -2.850 & -2.457\tabularnewline
+P\_(Intercept) & 1.007 & 0.694 & 0.694\tabularnewline
+P\_Urban & 1.739 & 2.150 & 2.150\tabularnewline
+P\_Agropastoral & 0.614 & 0.565 & 0.565\tabularnewline
+V\_(Intercept) & 0.223 & 0.691 & 0.691\tabularnewline
+V\_seasonnon-breeding & -2.326 & -2.850 & -2.850\tabularnewline
+\bottomrule
+\end{longtable}
+
+\section{Density Predictions}\label{density-predictions}
+
+The mean expected abundance (\(E\)) can be predicted for each surveyed
+site \(i\) as \(E_{i} = (\phi_{i} 2 + (1 - \phi_{i})\mu_{i})N_{i}\),
+where \(N\) is the mean number of groups, \(\mu\) is the mean group size
+and \(\phi\) is the V(=2)-inflation probability (i.e.~the probability
+that a given group will be a pair).
+
+We can then obtain the expected density stratified by habitat type, year
+and season, as \(D = \frac{\sum E}{\sum A}\), where \(A\) is the area
+surveyed.
+
+\begin{longtable}[]{@{}lrlrrr@{}}
+\caption{\textit{E. ferrugineous} mean density predictions for each
+habitat type, habitat type, year and season}\tabularnewline
+\toprule
+Habitat & Year & Season & Density (individuals/ha) & Density (2.5\% CI)
+& Density (97.5\% CI)\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+Habitat & Year & Season & Density (individuals/ha) & Density (2.5\% CI)
+& Density (97.5\% CI)\tabularnewline
+\midrule
+\endhead
+Agropastoral & 2013 & breeding & 0.003 & 0.001 & 0.007\tabularnewline
+Other & 2013 & breeding & 0.003 & 0.001 & 0.008\tabularnewline
+Urban & 2013 & breeding & 0.009 & 0.003 & 0.021\tabularnewline
+Agropastoral & 2015 & breeding & 0.001 & 0.000 & 0.003\tabularnewline
+Other & 2015 & breeding & 0.003 & 0.001 & 0.008\tabularnewline
+Urban & 2015 & breeding & 0.006 & 0.002 & 0.013\tabularnewline
+Agropastoral & 2013 & non-breeding & 0.009 & 0.005 &
+0.014\tabularnewline
+Other & 2013 & non-breeding & 0.020 & 0.015 & 0.027\tabularnewline
+Urban & 2013 & non-breeding & 0.135 & 0.094 & 0.186\tabularnewline
+Agropastoral & 2014 & non-breeding & 0.011 & 0.007 &
+0.016\tabularnewline
+Other & 2014 & non-breeding & 0.019 & 0.014 & 0.025\tabularnewline
+Urban & 2014 & non-breeding & 0.225 & 0.176 & 0.288\tabularnewline
+Agropastoral & 2015 & non-breeding & 0.007 & 0.005 &
+0.011\tabularnewline
+Other & 2015 & non-breeding & 0.011 & 0.009 & 0.015\tabularnewline
+Urban & 2015 & non-breeding & 0.089 & 0.069 & 0.114\tabularnewline
+Agropastoral & 2016 & non-breeding & 0.003 & 0.002 &
+0.005\tabularnewline
+Other & 2016 & non-breeding & 0.009 & 0.006 & 0.012\tabularnewline
+Urban & 2016 & non-breeding & 0.035 & 0.025 & 0.049\tabularnewline
 \bottomrule
 \end{longtable}
 
@@ -577,7 +633,7 @@ par5 & -2.326 & -2.850 & -2.457\tabularnewline
 leptorhynchus}}{Slender-billed parakeet Enicognathus leptorhynchus}}\label{slender-billed-parakeet-enicognathus-leptorhynchus}
 
 \begin{figure}[H]
-\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-20-1} \caption{\textit{Enicognathus leptorhynchus} count frequencies}\label{fig:unnamed-chunk-20}
+\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-21-1} \caption{\textit{Enicognathus leptorhynchus} count frequencies}\label{fig:unnamed-chunk-21}
 \end{figure}
 
 \subsection{Estimating effective detection radius
@@ -653,15 +709,14 @@ Agropastoral & 180.7002\tabularnewline
 \subsection{Models for number of
 groups}\label{models-for-number-of-groups-1}
 
-As for the austral parakeet, the model for number of groups is
-G\textsubscript{i} \textasciitilde{}
+The model for number of groups is G\textsubscript{i} \textasciitilde{}
 Poisson(D\textsubscript{i}A\textsubscript{i}), where D\textsubscript{i}
 = covariates and A\textsubscript{i} = area sampled in site \emph{i}.
 A\textsubscript{i} is calculated using the habitat-specific estimated
 EDR, and is added to the model as an offset.
 
 \begin{figure}[H]
-\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-24-1} \caption{\textit{Enicognathus leptorhynchus} group numbers }\label{fig:unnamed-chunk-24}
+\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-25-1} \caption{\textit{Enicognathus leptorhynchus} group numbers }\label{fig:unnamed-chunk-25}
 \end{figure}
 
 \subsubsection{Model selection}\label{model-selection-1}
@@ -690,7 +745,7 @@ ngroup.ele & 2 & 2761.122 & 274.13\tabularnewline
 
 The models `ngroup.hab.ele' (with linear elevation effect) and
 `ngroup.hab.ele2' (with quadratic effect) are equally parsimonious
-(Table 18), but the quadratic term in the latter is mostly uniformative
+(Table 18), but the quadratic term in the latter is mostly uninformative
 (Tables 19-20). Given these are nested models, we drop the quadratic
 term and continue with the model with habitat and linear elevation
 effects.
@@ -733,7 +788,7 @@ elevation & 1 & 7.512 & 2897 & 2081.018\tabularnewline
 \end{longtable}
 
 Adding within-year temporal covariates (breeding/non-breeding season and
-julian date) and their interactions with habitat:
+Julian date) and their interactions with habitat:
 
 \begin{longtable}[]{@{}lrrr@{}}
 \caption{\textit{E. leptorhynchus} number of group models (within-year
@@ -792,13 +847,13 @@ predictor) AIC table}\tabularnewline
 & df & AIC & dAIC\tabularnewline
 \midrule
 \endhead
-ngroup.habXjdate.ele.year & 8 & 1993.981 & 0.00\tabularnewline
-ngroup.habXjdate.ele & 7 & 2110.653 & 116.67\tabularnewline
+ngroup.habXjdate.ele.year & 10 & 1907.516 & 0.00\tabularnewline
+ngroup.habXjdate.ele & 7 & 2110.653 & 203.14\tabularnewline
 \bottomrule
 \end{longtable}
 
 The best-ranked model indicates that the number of groups is affected by
-habitat type, elevation, julian date and year (Tables 23-24).
+habitat type, elevation, Julian date and year (Tables 23-24).
 
 \begin{longtable}[]{@{}lrrrr@{}}
 \caption{\textit{E. leptorhynchus} `ngroup.habXjdate.ele.year' model
@@ -813,14 +868,16 @@ Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
 Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
 \midrule
 \endhead
-(Intercept) & -3.952 & 0.264 & -14.974 & 0.000\tabularnewline
-habitatOther & -1.629 & 0.150 & -10.893 & 0.000\tabularnewline
-habitatUrban & -0.506 & 0.144 & -3.507 & 0.000\tabularnewline
-elevation & 0.000 & 0.000 & 2.851 & 0.004\tabularnewline
-seasonnon-breeding & -0.749 & 0.201 & -3.723 & 0.000\tabularnewline
-as.factor(year)2014 & 0.669 & 0.276 & 2.422 & 0.015\tabularnewline
-as.factor(year)2015 & 1.763 & 0.237 & 7.452 & 0.000\tabularnewline
-as.factor(year)2016 & 3.280 & 0.239 & 13.705 & 0.000\tabularnewline
+(Intercept) & -3.424 & 0.553 & -6.189 & 0.000\tabularnewline
+elevation & 0.001 & 0.000 & 3.208 & 0.001\tabularnewline
+habitatOther & 0.677 & 0.350 & 1.932 & 0.053\tabularnewline
+habitatUrban & 0.566 & 0.257 & 2.206 & 0.027\tabularnewline
+jdate & -0.002 & 0.002 & -1.291 & 0.197\tabularnewline
+as.factor(year)2014 & -0.201 & 0.352 & -0.570 & 0.569\tabularnewline
+as.factor(year)2015 & 1.388 & 0.233 & 5.953 & 0.000\tabularnewline
+as.factor(year)2016 & 1.909 & 0.442 & 4.322 & 0.000\tabularnewline
+habitatOther:jdate & -0.020 & 0.004 & -5.091 & 0.000\tabularnewline
+habitatUrban:jdate & -0.008 & 0.002 & -4.327 & 0.000\tabularnewline
 \bottomrule
 \end{longtable}
 
@@ -836,14 +893,32 @@ as.factor(year)2016 & 3.280 & 0.239 & 13.705 & 0.000\tabularnewline
 \midrule
 \endhead
 NULL & NA & NA & 2900 & 2358.856\tabularnewline
-habitat & 2 & 270.326 & 2898 & 2088.530\tabularnewline
-elevation & 1 & 7.512 & 2897 & 2081.018\tabularnewline
-season & 1 & 0.776 & 2896 & 2080.243\tabularnewline
-as.factor(year) & 3 & 501.078 & 2893 & 1579.165\tabularnewline
+elevation & 1 & 0.551 & 2899 & 2358.306\tabularnewline
+habitat & 2 & 277.287 & 2897 & 2081.018\tabularnewline
+jdate & 1 & 259.490 & 2896 & 1821.528\tabularnewline
+as.factor(year) & 3 & 239.982 & 2893 & 1581.547\tabularnewline
+habitat:jdate & 2 & 92.847 & 2891 & 1488.700\tabularnewline
 \bottomrule
 \end{longtable}
 
 \subsection{Models for group size}\label{models-for-group-size-1}
+
+\subsubsection{Goodness-of-fit}\label{goodness-of-fit-1}
+
+Model goodness-of-fit can be evaluated visually, inspecting the
+proportions of fitted values against the count distribution. Deviation
+from the 1:1 line can be used as a goodness-of-fit metric, with the
+better model showing smaller deviation.
+
+\begin{figure}[H]
+\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-33-1} \caption{\textit{Enicognathus leptorhynchus} group size model goodness-of-fit (red: null model; blue: habitat.season model). Better model is closer to 1:1 line.}\label{fig:unnamed-chunk-33}
+\end{figure}
+
+The deviation of null model is 1.62, and of the VIP.habitat.season model
+is 1.65.
+
+\subsubsection{Confidence intervals for model
+estimates}\label{confidence-intervals-for-model-estimates-1}
 
 \begin{longtable}[]{@{}lrrrr@{}}
 \caption{\textit{E. leptorhynchus} group size model
@@ -867,8 +942,8 @@ V\_seasonnon-breeding & -17.695 & NA & NA & NA\tabularnewline
 \end{longtable}
 
 Model-fitting function cannot estimate coefficient standard errors due
-to sigular Hessian matrix (Table 25). We can calculate confidence
-intervals based on quantiles using bootstrap (with n=10):
+to singular Hessian matrix (Table 25). We can calculate confidence
+intervals based on quantiles using bootstrap (with n=250):
 
 \begin{longtable}[]{@{}lrrr@{}}
 \caption{Estimated coefficients and 95\% CI based on bootstrap quantiles
@@ -881,11 +956,68 @@ for \textit{E. leptorhynchus} group size models}\tabularnewline
 & Estimate & 2.5\% & 97.5\%\tabularnewline
 \midrule
 \endhead
-P\_(Intercept) & -8.066 & -24.134 & 14.816\tabularnewline
-P\_Urban & 8.809 & -32.641 & 11.122\tabularnewline
-P\_Agropastoral & 31.024 & -23.261 & 26.760\tabularnewline
-V\_(Intercept) & 22.401 & -19.278 & 19.140\tabularnewline
-V\_seasonnon-breeding & -17.695 & -28.163 & 11.926\tabularnewline
+P\_(Intercept) & -8.066 & -20.905 & 30.686\tabularnewline
+P\_Urban & 8.809 & -26.727 & 26.113\tabularnewline
+P\_Agropastoral & 31.024 & -25.722 & 26.283\tabularnewline
+V\_(Intercept) & 22.401 & -24.223 & 25.795\tabularnewline
+V\_seasonnon-breeding & -17.695 & -25.549 & 27.828\tabularnewline
+\bottomrule
+\end{longtable}
+
+Results indicate that habitat type and season are not good predictors of
+group size for the slender-billed parakeet.
+
+\section{Density Predictions}\label{density-predictions-1}
+
+The mean expected abundance (\(E\)) can be predicted for each surveyed
+site \(i\) as \(E_{i} = (\phi_{i} 2 + (1 - \phi_{i})\mu_{i})N_{i}\),
+where \(N\) is the mean number of groups, \(\mu\) is the mean group size
+and \(\phi\) is the V(=2)-inflation probability (i.e.~the probability
+that a given group will be a pair).
+
+We can then obtain the expected density stratified by habitat type, year
+and season, as \(D = \frac{\sum E}{\sum A}\), where \(A\) is the area
+surveyed.
+
+Because habitat and season are not good predictors of group size for the
+Slender-billed Parakeet, we predict density using the \(\mu\) and
+\(\phi\) estimates from the null model for Gsize.
+
+\begin{longtable}[]{@{}lrlrrr@{}}
+\caption{\textit{E. ferrugineous} mean density predictions for each
+habitat type, habitat type, year and season}\tabularnewline
+\toprule
+Habitat & Year & Season & Density (individuals/ha) & Density (2.5\% CI)
+& Density (97.5\% CI)\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+Habitat & Year & Season & Density (individuals/ha) & Density (2.5\% CI)
+& Density (97.5\% CI)\tabularnewline
+\midrule
+\endhead
+Agropastoral & 2013 & breeding & 0.059 & 0.038 & 0.092\tabularnewline
+Other & 2013 & breeding & 0.000 & 0.000 & 0.002\tabularnewline
+Urban & 2013 & breeding & 0.010 & 0.004 & 0.022\tabularnewline
+Agropastoral & 2015 & breeding & 0.258 & 0.201 & 0.326\tabularnewline
+Other & 2015 & breeding & 0.001 & 0.000 & 0.008\tabularnewline
+Urban & 2015 & breeding & 0.036 & 0.017 & 0.079\tabularnewline
+Agropastoral & 2013 & non-breeding & 0.073 & 0.048 &
+0.112\tabularnewline
+Other & 2013 & non-breeding & 0.000 & 0.000 & 0.003\tabularnewline
+Urban & 2013 & non-breeding & 0.013 & 0.006 & 0.028\tabularnewline
+Agropastoral & 2014 & non-breeding & 0.075 & 0.052 &
+0.110\tabularnewline
+Other & 2014 & non-breeding & 0.014 & 0.008 & 0.025\tabularnewline
+Urban & 2014 & non-breeding & 0.044 & 0.028 & 0.068\tabularnewline
+Agropastoral & 2015 & non-breeding & 0.295 & 0.234 &
+0.369\tabularnewline
+Other & 2015 & non-breeding & 0.003 & 0.001 & 0.015\tabularnewline
+Urban & 2015 & non-breeding & 0.058 & 0.032 & 0.110\tabularnewline
+Agropastoral & 2016 & non-breeding & 0.795 & 0.652 &
+0.973\tabularnewline
+Other & 2016 & non-breeding & 0.486 & 0.364 & 0.661\tabularnewline
+Urban & 2016 & non-breeding & 0.730 & 0.531 & 0.990\tabularnewline
 \bottomrule
 \end{longtable}
 
@@ -894,7 +1026,15 @@ V\_seasonnon-breeding & -17.695 & -28.163 & 11.926\tabularnewline
 \section{VIP model - R functions and
 simulations}\label{vip-model---r-functions-and-simulations}
 
-\subsubsection{Peter Sólymos}\label{peter-solymos}
+\subsubsection{Peter Solymos}\label{peter-solymos}
+
+\subsection{Functions}\label{functions}
+
+The \texttt{vip} function does the optimization. \texttt{method}
+argument can take values listed for \texttt{optim} and also
+\texttt{"DE"} for differential evolution algorithm. If there are
+convergence issues with \texttt{"Nelder-Mead"}, try \texttt{"SANN"} and
+\texttt{"DE"}.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -962,6 +1102,7 @@ simulations}\label{vip-model---r-functions-and-simulations}
 \NormalTok{        xinv}
 \NormalTok{    \}}
     \ControlFlowTok{if}\NormalTok{ (}\KeywordTok{is.null}\NormalTok{(init))}
+
 \NormalTok{        init <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\DecValTok{0}\NormalTok{, kx}\OperatorTok{+}\NormalTok{kz)}
 \NormalTok{    nll <-}\StringTok{ }\ControlFlowTok{if}\NormalTok{ (truncate) nll_VIP_TR }\ControlFlowTok{else}\NormalTok{ nll_VIP_ML}
 
@@ -1397,7 +1538,7 @@ Here we use covariates for both the V and non-V part.
 ## alpha2  0.5  0.47040670
 \end{verbatim}
 
-\section{Goodness of fit}\label{goodness-of-fit}
+\section{Goodness of fit}\label{goodness-of-fit-2}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1487,7 +1628,7 @@ Here we use covariates for both the V and non-V part.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-38-1.pdf}
+\includegraphics{Patagonia_parrots_density_analysis_files/figure-latex/unnamed-chunk-42-1.pdf}
 
 \begin{Shaded}
 \begin{Highlighting}[]
