@@ -122,7 +122,7 @@
   \postauthor{\par}
   \predate{\centering\large\emph}
   \postdate{\par}
-  \date{June 8, 2018}
+  \date{June 25, 2018}
 
 \usepackage{float}
 
@@ -501,8 +501,8 @@ better model showing smaller deviation.
 The deviation of null model is 1.38, and of the VIP.habitat.season model
 is 1.17.
 
-\subsubsection{Confidence intervals for model
-estimates}\label{confidence-intervals-for-model-estimates}
+\subsubsection{Model estimates and confidence
+intervals}\label{model-estimates-and-confidence-intervals}
 
 Estimated model coefficients (Table 13) indicate that group sizes are
 larger in urban (\(\beta\) = 0.877) and agropastoral (\(\beta\) = 0.622)
@@ -917,15 +917,8 @@ better model showing smaller deviation.
 The deviation of null model is 1.62, and of the VIP.habitat.season model
 is 1.59.
 
-\subsubsection{Confidence intervals for model
-estimates}\label{confidence-intervals-for-model-estimates-1}
-
-Estimated model coefficients (Table 25) indicate that group sizes are
-slightly smaller in urban (\(\beta\) = -0.055) and larger in
-agropastoral (\(\beta\) = 0.154) habitats when compared to other natural
-habitats. Moreover, the probability of there being extra pairs (i.e.~the
-V-inflation probability, \(\phi\)) is smaller in the non-breeding season
-(\(\beta\) = -1.295).
+\subsubsection{Model estimates and confidence
+intervals}\label{model-estimates-and-confidence-intervals-1}
 
 \begin{longtable}[]{@{}lrrrr@{}}
 \caption{\textit{E. leptorhynchus} group size model
@@ -942,38 +935,29 @@ Pr(\textgreater{}\textbar{}z\textbar{})\tabularnewline
 \endhead
 P\_(Intercept) & 5.231 & 0 & 6.213682e+54 & 0\tabularnewline
 P\_Urban & -0.055 & 0 & -1.311872e+49 & 0\tabularnewline
-P\_Agropastoral & 0.154 & 0 & 3.659219e+49 & 0\tabularnewline
-V\_(Intercept) & -0.430 & 0 & -7.216786e+49 & 0\tabularnewline
-V\_seasonnon-breeding & -1.295 & 0 & -2.175643e+50 & 0\tabularnewline
+P\_Agropastoral & 0.154 & 0 & 3.659220e+49 & 0\tabularnewline
+V\_(Intercept) & -0.432 & 0 & -7.254354e+49 & 0\tabularnewline
+V\_seasonnon-breeding & -1.293 & 0 & -2.172534e+50 & 0\tabularnewline
 \bottomrule
 \end{longtable}
 
 Confidence intervals (CI) based on estimated standard errors can be
 obtained (Table 26):
 
-\begin{longtable}[]{@{}lrr@{}}
-\caption{\textit{E. leptorhynchus} group size model CI}\tabularnewline
-\toprule
-& 2.5\% & 97.5\%\tabularnewline
-\midrule
-\endfirsthead
-\toprule
-& 2.5\% & 97.5\%\tabularnewline
-\midrule
-\endhead
-P\_(Intercept) & 5.231 & 5.231\tabularnewline
-P\_Urban & -0.055 & -0.055\tabularnewline
-P\_Agropastoral & 0.154 & 0.154\tabularnewline
-V\_(Intercept) & -0.430 & -0.430\tabularnewline
-V\_seasonnon-breeding & -1.295 & -1.295\tabularnewline
-\bottomrule
-\end{longtable}
+Estimated model coefficients (Table 25) indicate that group sizes are
+slightly smaller in urban (\(\beta\) = -0.055) and larger in
+agropastoral (\(\beta\) = 0.154) habitats when compared to other natural
+habitats. Moreover, the probability of there being extra pairs (i.e.~the
+V-inflation probability, \(\phi\)) is smaller in the non-breeding season
+(\(\beta\) = -1.293).
 
-We can also calculate confidence intervals based on quantiles using
-bootstrap (with n=250):
+The very low estimated standard errors indicate that there may be some
+issues with this model. This is further corroborated by the different
+coefficient and CI values obtained using the bootstrap mean and quantile
+approach.
 
 \begin{longtable}[]{@{}lrrr@{}}
-\caption{Estimated coefficients and 95\% CI based on bootstrap quantiles
+\caption{Coefficients and 95\% CI based on bootstrap mean and quantiles
 for \textit{E. leptorhynchus} group size models}\tabularnewline
 \toprule
 & Estimate & 2.5\% & 97.5\%\tabularnewline
@@ -983,13 +967,18 @@ for \textit{E. leptorhynchus} group size models}\tabularnewline
 & Estimate & 2.5\% & 97.5\%\tabularnewline
 \midrule
 \endhead
-P\_(Intercept) & 5.231 & 4.478 & 4.478\tabularnewline
-P\_Urban & -0.055 & 0.698 & 0.698\tabularnewline
-P\_Agropastoral & 0.154 & 0.454 & 0.454\tabularnewline
-V\_(Intercept) & -0.430 & -0.062 & -0.059\tabularnewline
-V\_seasonnon-breeding & -1.295 & -1.687 & -1.684\tabularnewline
+P\_(Intercept) & 4.478 & 4.478 & 4.478\tabularnewline
+P\_Urban & 0.698 & 0.698 & 0.698\tabularnewline
+P\_Agropastoral & 0.454 & 0.454 & 0.454\tabularnewline
+V\_(Intercept) & -0.061 & -0.062 & -0.059\tabularnewline
+V\_seasonnon-breeding & -1.685 & -1.687 & -1.684\tabularnewline
 \bottomrule
 \end{longtable}
+
+Because of the lack of concordance between direct estimates and the
+bootstrap approach, indicative of issues with the model, and since there
+is only a very small difference in goodness-of-fit compared to the null
+model (Figure 6), we report density prediction using the null model.
 
 \subsection{Density Predictions}\label{density-predictions-1}
 
@@ -1004,7 +993,7 @@ and season, as \(D = \frac{\sum E}{\sum A}\), where \(A\) is the area
 surveyed.
 
 \begin{longtable}[]{@{}lrlrrr@{}}
-\caption{\textit{E. ferrugineous} mean density predictions for each
+\caption{\textit{E. leptorhynchus} mean density predictions for each
 habitat type, year and season}\tabularnewline
 \toprule
 Habitat & Year & Season & Density (individuals/ha) & Density (2.5\% CI)
@@ -1016,28 +1005,28 @@ Habitat & Year & Season & Density (individuals/ha) & Density (2.5\% CI)
 & Density (97.5\% CI)\tabularnewline
 \midrule
 \endhead
-Agropastoral & 2013 & breeding & 0.044 & 0.028 & 0.068\tabularnewline
-Other & 2013 & breeding & 0.000 & 0.000 & 0.001\tabularnewline
-Urban & 2013 & breeding & 0.006 & 0.002 & 0.013\tabularnewline
-Agropastoral & 2015 & breeding & 0.189 & 0.147 & 0.239\tabularnewline
-Other & 2015 & breeding & 0.001 & 0.000 & 0.005\tabularnewline
-Urban & 2015 & breeding & 0.022 & 0.010 & 0.047\tabularnewline
-Agropastoral & 2013 & non-breeding & 0.075 & 0.049 &
-0.114\tabularnewline
-Other & 2013 & non-breeding & 0.000 & 0.000 & 0.002\tabularnewline
-Urban & 2013 & non-breeding & 0.011 & 0.005 & 0.023\tabularnewline
-Agropastoral & 2014 & non-breeding & 0.077 & 0.053 &
+Agropastoral & 2013 & breeding & 0.059 & 0.038 & 0.092\tabularnewline
+Other & 2013 & breeding & 0.000 & 0.000 & 0.002\tabularnewline
+Urban & 2013 & breeding & 0.010 & 0.004 & 0.022\tabularnewline
+Agropastoral & 2015 & breeding & 0.258 & 0.201 & 0.326\tabularnewline
+Other & 2015 & breeding & 0.001 & 0.000 & 0.008\tabularnewline
+Urban & 2015 & breeding & 0.036 & 0.017 & 0.079\tabularnewline
+Agropastoral & 2013 & non-breeding & 0.073 & 0.048 &
 0.112\tabularnewline
-Other & 2014 & non-breeding & 0.012 & 0.007 & 0.022\tabularnewline
-Urban & 2014 & non-breeding & 0.037 & 0.023 & 0.057\tabularnewline
-Agropastoral & 2015 & non-breeding & 0.302 & 0.239 &
-0.377\tabularnewline
-Other & 2015 & non-breeding & 0.003 & 0.001 & 0.013\tabularnewline
-Urban & 2015 & non-breeding & 0.048 & 0.026 & 0.091\tabularnewline
-Agropastoral & 2016 & non-breeding & 0.813 & 0.666 &
-0.994\tabularnewline
-Other & 2016 & non-breeding & 0.426 & 0.319 & 0.580\tabularnewline
-Urban & 2016 & non-breeding & 0.605 & 0.441 & 0.821\tabularnewline
+Other & 2013 & non-breeding & 0.000 & 0.000 & 0.003\tabularnewline
+Urban & 2013 & non-breeding & 0.013 & 0.006 & 0.028\tabularnewline
+Agropastoral & 2014 & non-breeding & 0.075 & 0.052 &
+0.110\tabularnewline
+Other & 2014 & non-breeding & 0.014 & 0.008 & 0.025\tabularnewline
+Urban & 2014 & non-breeding & 0.044 & 0.028 & 0.068\tabularnewline
+Agropastoral & 2015 & non-breeding & 0.295 & 0.234 &
+0.369\tabularnewline
+Other & 2015 & non-breeding & 0.003 & 0.001 & 0.015\tabularnewline
+Urban & 2015 & non-breeding & 0.058 & 0.032 & 0.110\tabularnewline
+Agropastoral & 2016 & non-breeding & 0.795 & 0.652 &
+0.973\tabularnewline
+Other & 2016 & non-breeding & 0.486 & 0.364 & 0.661\tabularnewline
+Urban & 2016 & non-breeding & 0.730 & 0.531 & 0.990\tabularnewline
 \bottomrule
 \end{longtable}
 
